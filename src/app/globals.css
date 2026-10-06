@@ -1,0 +1,67 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
+  --color-brand-50: #eef4fc;
+  --color-brand-100: #d9e6f7;
+  --color-brand-200: #b4ccee;
+  --color-brand-300: #84aae0;
+  --color-brand-400: #5384cd;
+  --color-brand-500: #3a70c0;
+  --color-brand-600: #2e64b5;
+  --color-brand-700: #254f91;
+  --color-brand-800: #1d3d70;
+  --color-brand-900: #142a4e;
+  --color-brand-950: #0c1a31;
+
+  --color-steel-50: #f5f7f9;
+  --color-steel-100: #eaeef2;
+  --color-steel-200: #d5dce3;
+  --color-steel-300: #b4bfca;
+  --color-steel-400: #a2acb6;
+  --color-steel-500: #8a939c;
+  --color-steel-600: #56616d;
+  --color-steel-700: #444d57;
+  --color-steel-800: #2f363d;
+
+  --color-copper-300: #f0b585;
+  --color-copper-500: #d97b33;
+  --color-copper-600: #c0661f;
+  --color-copper-700: #9c5118;
+
+  --color-ink: #16202b;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 5.5rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+body {
+  background: #ffffff;
+  color: var(--color-ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Branded backdrop shown behind photos (and instead of them if one fails). */
+.photo-fallback {
+  background:
+    repeating-linear-gradient(
+      90deg,
+      transparent 0 46px,
+      rgb(255 255 255 / 0.06) 46px 52px
+    ),
+    repeating-linear-gradient(
+      0deg,
+      transparent 0 70px,
+      rgb(255 255 255 / 0.05) 70px 76px
+    ),
+    linear-gradient(135deg, var(--color-brand-600), var(--color-brand-900));
+}
