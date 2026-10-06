@@ -40,6 +40,7 @@ import {
   type ServiceKey,
 } from "@/lib/content";
 import Header, { LangToggle } from "./Header";
+import Gallery from "./Gallery";
 import QuoteForm from "./QuoteForm";
 import { useLang } from "./lang";
 import {
@@ -100,6 +101,7 @@ export default function Site() {
           <Services t={t} />
           <Groups t={t} />
           <Shop t={t} />
+          <Gallery t={t} lang={lang} icons={serviceIcons} />
           <Why t={t} />
           <Contact t={t} lang={lang} />
           <Quote t={t} />

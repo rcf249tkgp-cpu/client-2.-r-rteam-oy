@@ -217,7 +217,7 @@ export function Photo({
   sizes = "(min-width: 1024px) 33vw, 100vw",
   icon: Icon,
 }: {
-  src: string;
+  src: string | null;
   alt: string;
   className?: string;
   priority?: boolean;
@@ -233,7 +233,7 @@ export function Photo({
       >
         {Icon && <Icon className="size-20 text-white/25" strokeWidth={1.25} />}
       </div>
-      {!failed && (
+      {src && !failed && (
         <Image
           src={src}
           alt={alt}

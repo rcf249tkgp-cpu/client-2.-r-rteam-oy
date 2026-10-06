@@ -61,6 +61,24 @@ export const serviceKeys = [
 ] as const;
 export type ServiceKey = (typeof serviceKeys)[number];
 
+/**
+ * Gallery. Placeholders until the client's photos arrive:
+ * put the files in public/gallery/ and set e.g. src: "/gallery/01.jpg",
+ * plus an alt text in both languages. `icon` picks the placeholder icon.
+ */
+export const gallery: {
+  src: string | null;
+  icon: ServiceKey;
+  alt?: { sv: string; fi: string };
+}[] = [
+  { src: null, icon: "pipes" },
+  { src: null, icon: "heating" },
+  { src: null, icon: "bathroom" },
+  { src: null, icon: "ventilation" },
+  { src: null, icon: "service" },
+  { src: null, icon: "projects" },
+];
+
 export const groupKeys = ["private", "housing", "business", "municipal"] as const;
 export type GroupKey = (typeof groupKeys)[number];
 
@@ -210,6 +228,15 @@ const sv = {
     thanksTitle: "Tack för din förfrågan!",
     thanksText: "Detta är en demo – formuläret skickar inga uppgifter ännu. Ring gärna oss direkt.",
     again: "Skicka en ny förfrågan",
+  },
+  gallery: {
+    kicker: "Galleri",
+    title: "Bilder från våra arbeten",
+    placeholder: "Bild kommer",
+    open: "Öppna bild",
+    close: "Stäng",
+    prev: "Föregående bild",
+    next: "Nästa bild",
   },
   footer: {
     businessId: "FO-nr / Y-tunnus",
@@ -364,6 +391,15 @@ const fi: Dict = {
     thanksTitle: "Kiitos tarjouspyynnöstäsi!",
     thanksText: "Tämä on demo – lomake ei vielä lähetä tietoja. Soita meille suoraan.",
     again: "Lähetä uusi pyyntö",
+  },
+  gallery: {
+    kicker: "Galleria",
+    title: "Kuvia töistämme",
+    placeholder: "Kuva tulossa",
+    open: "Avaa kuva",
+    close: "Sulje",
+    prev: "Edellinen kuva",
+    next: "Seuraava kuva",
   },
   footer: {
     businessId: "Y-tunnus",
