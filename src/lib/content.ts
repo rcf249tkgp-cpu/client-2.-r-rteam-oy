@@ -35,20 +35,19 @@ export const people = [
   },
 ] as const;
 
-// Placeholder photos (Unsplash). Swap for the company's own project photos.
-const u = (id: string, w = 1200) =>
-  `https://images.unsplash.com/${id}?auto=format&fit=crop&w=${w}&q=75`;
-
+// Stock photos (Unsplash License), downloaded and colour-graded as one set.
+// Replace with the company's own photos when available.
 export const photos = {
-  hero: u("photo-1585704032915-c3400ca199e7", 1600),
-  pipes: u("photo-1607472586893-edb57bdc0e39", 900),
-  heating: u("photo-1621905252507-b35492cc74b4", 900),
-  ventilation: u("photo-1581094794329-c8112a89af12", 900),
-  bathroom: u("photo-1552321554-5fefe8c9ef14", 900),
-  service: u("photo-1581244277943-fe4a9c777189", 900),
-  projects: u("photo-1504328345606-18bbc8c9d7d1", 900),
-  shop: u("photo-1581783898377-1c85bf937427", 1200),
-  why: u("photo-1584622650111-993a426fbf0a", 1200),
+  hero: "/images/hero.webp",
+  pipes: "/images/pipes.webp",
+  heating: "/images/heating.webp",
+  ventilation: "/images/ventilation.webp",
+  bathroom: "/images/bathroom.webp",
+  service: "/images/service.webp",
+  projects: "/images/projects.webp",
+  shop: "/images/shop.webp",
+  why: "/images/why.webp",
+  detail: "/images/detail.webp",
 };
 
 export const serviceKeys = [
@@ -62,24 +61,56 @@ export const serviceKeys = [
 export type ServiceKey = (typeof serviceKeys)[number];
 
 /**
- * Gallery. Placeholders until the client's photos arrive:
- * put the files in public/gallery/ and set e.g. src: "/gallery/01.jpg",
- * plus an alt text in both languages. `icon` picks the placeholder icon.
+ * Gallery. Example photos for now: to use the client's own, put the files in
+ * public/gallery/ and point `src` at them (e.g. "/gallery/01.jpg") with an
+ * alt text in both languages. `src: null` shows a branded placeholder tile.
  */
 export const gallery: {
   src: string | null;
   icon: ServiceKey;
   alt?: { sv: string; fi: string };
 }[] = [
-  { src: null, icon: "pipes" },
-  { src: null, icon: "heating" },
-  { src: null, icon: "bathroom" },
-  { src: null, icon: "ventilation" },
-  { src: null, icon: "service" },
-  { src: null, icon: "projects" },
+  {
+    src: "/images/g1.webp",
+    icon: "bathroom",
+    alt: {
+      sv: "Modernt badrum med duschvägg",
+      fi: "Moderni kylpyhuone ja suihkuseinä",
+    },
+  },
+  {
+    src: "/images/g2.webp",
+    icon: "pipes",
+    alt: { sv: "Rördragning på tegelvägg", fi: "Putkisto tiiliseinällä" },
+  },
+  {
+    src: "/images/g3.webp",
+    icon: "service",
+    alt: { sv: "Vattenkran", fi: "Vesihana" },
+  },
+  {
+    src: "/images/g4.webp",
+    icon: "bathroom",
+    alt: { sv: "Badrum med badkar", fi: "Kylpyhuone ja kylpyamme" },
+  },
+  {
+    src: "/images/g5.webp",
+    icon: "bathroom",
+    alt: { sv: "Ljust badrum med dusch", fi: "Valoisa kylpyhuone ja suihku" },
+  },
+  {
+    src: "/images/g6.webp",
+    icon: "service",
+    alt: { sv: "Verktyg", fi: "Työkalut" },
+  },
 ];
 
-export const groupKeys = ["private", "housing", "business", "municipal"] as const;
+export const groupKeys = [
+  "private",
+  "housing",
+  "business",
+  "municipal",
+] as const;
 export type GroupKey = (typeof groupKeys)[number];
 
 export const locations = ["narpes", "kristinestad", "kasko", "other"] as const;
@@ -94,6 +125,7 @@ const sv = {
     about: "Varför oss",
     contact: "Kontakt",
     quote: "Begär offert",
+    gallery: "Galleri",
   },
   call: "Ring oss",
   callShort: "Ring",
@@ -106,6 +138,7 @@ const sv = {
     lead: "Vi utför alla slags VVS-installationer för privatkunder, bostadsbolag, företag och kommuner – snabbt, kostnadseffektivt och så att det fungerar.",
     quote: "Begär offert",
     facts: ["Sedan 2013", "Team på 7 personer", "Egen VVS-butik i Närpes"],
+    scroll: "Scrolla",
   },
   services: {
     kicker: "Tjänster",
@@ -148,7 +181,7 @@ const sv = {
         text: "Egnahemshus, fritidshus och lägenheter.",
       },
       housing: {
-        title: "Bostadsbolag",
+        title: "Bostads\u00ADbolag",
         text: "Installationer och reparationer i bostadsbolagets fastigheter.",
       },
       business: {
@@ -174,7 +207,7 @@ const sv = {
   },
   why: {
     kicker: "Varför Rörteam",
-    title: "Snabbt, kostnadseffektivt och så att det fungerar",
+    title: "Snabbt, kostnads\u00ADeffektivt och så att det fungerar",
     lead: "Vårt mål är att betjäna våra kunder så snabbt som möjligt, på ett kostnadseffektivt och fungerande sätt.",
     items: [
       {
@@ -222,17 +255,20 @@ const sv = {
     jobOther: "Annat",
     choose: "Välj…",
     message: "Meddelande",
-    messagePh: "Beskriv arbetet, t.ex. vad som ska installeras eller repareras.",
+    messagePh:
+      "Beskriv arbetet, t.ex. vad som ska installeras eller repareras.",
     submit: "Skicka förfrågan",
     required: "obligatorisk",
     thanksTitle: "Tack för din förfrågan!",
-    thanksText: "Detta är en demo – formuläret skickar inga uppgifter ännu. Ring gärna oss direkt.",
+    thanksText:
+      "Detta är en demo – formuläret skickar inga uppgifter ännu. Ring gärna oss direkt.",
     again: "Skicka en ny förfrågan",
   },
   gallery: {
     kicker: "Galleri",
     title: "Bilder från våra arbeten",
     placeholder: "Bild kommer",
+    note: "Exempelbilder – ersätts med egna bilder",
     open: "Öppna bild",
     close: "Stäng",
     prev: "Föregående bild",
@@ -242,6 +278,7 @@ const sv = {
     businessId: "FO-nr / Y-tunnus",
     site: "Webbplats",
     rights: "Alla rättigheter förbehållna.",
+    top: "Till toppen",
   },
 };
 
@@ -257,6 +294,7 @@ const fi: Dict = {
     about: "Miksi me",
     contact: "Yhteystiedot",
     quote: "Pyydä tarjous",
+    gallery: "Galleria",
   },
   call: "Soita meille",
   callShort: "Soita",
@@ -265,10 +303,13 @@ const fi: Dict = {
   langLabel: "Kieli",
   hero: {
     eyebrow: "LVI-palvelua Pohjanmaalla vuodesta 2013",
-    title: "LVI-asennukset Närpiössä, Kristiinankaupungissa ja Kaskisissa",
+    // \u00AD = soft hyphen, lets the long place name break on narrow phones.
+    title:
+      "LVI-asennukset Närpiössä, Kristiinan\u00ADkaupungissa ja Kaskisissa",
     lead: "Teemme kaikenlaisia LVI-asennuksia yksityisasiakkaille, taloyhtiöille, yrityksille ja kunnille – nopeasti, kustannustehokkaasti ja toimivasti.",
     quote: "Pyydä tarjous",
     facts: ["Vuodesta 2013", "7 hengen tiimi", "Oma LVI-myymälä Närpiössä"],
+    scroll: "Vieritä",
   },
   services: {
     kicker: "Palvelut",
@@ -307,7 +348,7 @@ const fi: Dict = {
     title: "Palvelemme kaikkia – isoja ja pieniä",
     items: {
       private: {
-        title: "Yksityisasiakkaat",
+        title: "Yksityis\u00ADasiakkaat",
         text: "Omakotitalot, vapaa-ajan asunnot ja kerrostaloasunnot.",
       },
       housing: {
@@ -337,7 +378,7 @@ const fi: Dict = {
   },
   why: {
     kicker: "Miksi Rörteam",
-    title: "Nopeasti, kustannustehokkaasti ja toimivasti",
+    title: "Nopeasti, kustannus\u00ADtehokkaasti ja toimivasti",
     lead: "Tavoitteemme on palvella asiakkaitamme mahdollisimman nopeasti, kustannustehokkaasti ja toimivasti.",
     items: [
       {
@@ -389,13 +430,15 @@ const fi: Dict = {
     submit: "Lähetä tarjouspyyntö",
     required: "pakollinen",
     thanksTitle: "Kiitos tarjouspyynnöstäsi!",
-    thanksText: "Tämä on demo – lomake ei vielä lähetä tietoja. Soita meille suoraan.",
+    thanksText:
+      "Tämä on demo – lomake ei vielä lähetä tietoja. Soita meille suoraan.",
     again: "Lähetä uusi pyyntö",
   },
   gallery: {
     kicker: "Galleria",
     title: "Kuvia töistämme",
     placeholder: "Kuva tulossa",
+    note: "Esimerkkikuvat – korvataan omilla kuvilla",
     open: "Avaa kuva",
     close: "Sulje",
     prev: "Edellinen kuva",
@@ -405,6 +448,7 @@ const fi: Dict = {
     businessId: "Y-tunnus",
     site: "Verkkosivut",
     rights: "Kaikki oikeudet pidätetään.",
+    top: "Takaisin ylös",
   },
 };
 

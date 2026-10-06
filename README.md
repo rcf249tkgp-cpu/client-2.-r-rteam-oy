@@ -19,10 +19,13 @@ npx wrangler deploy
 
 ## Content
 
-All texts (SV + FI), contacts and photo URLs live in `src/lib/content.ts`.
+All texts (SV + FI), contacts, photo paths and the gallery list live in `src/lib/content.ts`.
+
+Design: Schibsted Grotesk (headlines) + Inter (body), off-white / deep navy base with Rörteam blue as the accent. Shared building blocks (buttons, section headings, reveal/count-up animations, the hero "water line") are in `src/components/ui.tsx`.
+
+Photos: stock photos from Unsplash (Unsplash License), downloaded into `public/images/` and colour-graded as one set (WebP). Replace them with the company's own photos when available; keep the same file names or update `photos` / `gallery` in `content.ts`.
 
 To confirm with the customer before going live:
-- Service list and descriptions (cards are marked "Exempel – bekräftas")
-- Photos are Unsplash placeholders, hotlinked; a branded fallback shows if one fails to load. Replace with the company's own photos.
-- Gallery: 6 placeholder tiles ("Bild kommer"). Add the client's photos to `public/gallery/` and set `src` (and `alt` in SV/FI) in the `gallery` list in `src/lib/content.ts`. Any number of photos works.
+- Service list and descriptions (marked "Exempel – bekräftas")
+- Gallery photos are examples (marked "Exempelbilder – ersätts med egna bilder")
 - The quote form is front-end only and does not send anything yet.

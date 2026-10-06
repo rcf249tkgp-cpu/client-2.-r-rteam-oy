@@ -4,11 +4,12 @@ import {
   MotionConfig,
   motion,
   useReducedMotion,
+  useScroll,
+  useTransform,
   type Variants,
 } from "framer-motion";
-import { Fragment } from "react";
 import {
-  ArrowRight,
+  ArrowUp,
   Building,
   Building2,
   Clock,
@@ -19,16 +20,13 @@ import {
   Landmark,
   Mail,
   MapPin,
-  Navigation,
   Phone,
   ShowerHead,
-  Store,
-  Timer,
-  Wallet,
   Wind,
   Wrench,
   type LucideIcon,
 } from "lucide-react";
+import { Fragment, useRef } from "react";
 import {
   company,
   groupKeys,
@@ -37,21 +35,25 @@ import {
   serviceKeys,
   type Dict,
   type GroupKey,
+  type Lang,
   type ServiceKey,
 } from "@/lib/content";
-import Header, { LangToggle } from "./Header";
 import Gallery from "./Gallery";
+import Header from "./Header";
 import QuoteForm from "./QuoteForm";
 import { useLang } from "./lang";
 import {
+  Arrow,
   BTN,
   CountUp,
   EASE,
+  FlowLine,
+  Label,
   Logo,
   Photo,
-  PipeDivider,
   Reveal,
-  SectionHeading,
+  SectionHead,
+  btn,
 } from "./ui";
 
 const serviceIcons: Record<ServiceKey, LucideIcon> = {
@@ -70,8 +72,6 @@ const groupIcons: Record<GroupKey, LucideIcon> = {
   municipal: Landmark,
 };
 
-const whyIcons: LucideIcon[] = [MapPin, Timer, Wallet];
-
 const mapSrc = `https://maps.google.com/maps?q=${encodeURIComponent(
   company.mapQuery,
 )}&z=15&output=embed`;
@@ -79,30 +79,27 @@ const directionsHref = `https://www.google.com/maps/dir/?api=1&destination=${enc
   company.mapQuery,
 )}`;
 
+const pad = (n: number) => String(n).padStart(2, "0");
+
+/** Page gutter + max width shared by every section. */
+const WRAP = "mx-auto w-full max-w-7xl px-5 sm:px-8";
+
 export default function Site() {
   const { lang, t, setLang } = useLang();
 
   return (
     <MotionConfig reducedMotion="user">
       <div id="top" className="flex min-h-screen flex-col">
-        <div className="bg-brand-950 text-white/85">
-          <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-1.5 text-xs sm:px-6">
-            <span className="font-medium tracking-wide">{t.banner}</span>
-            <div className="sm:hidden">
-              <LangToggle lang={lang} setLang={setLang} label={t.langLabel} dark />
-            </div>
-          </div>
-        </div>
-
         <Header t={t} lang={lang} setLang={setLang} />
 
         <main className="flex-1">
           <Hero t={t} />
+          <Stats t={t} />
           <Services t={t} />
           <Groups t={t} />
+          <Why t={t} />
           <Shop t={t} />
           <Gallery t={t} lang={lang} icons={serviceIcons} />
-          <Why t={t} />
           <Contact t={t} lang={lang} />
           <Quote t={t} />
         </main>
@@ -113,188 +110,307 @@ export default function Site() {
   );
 }
 
+/* ------------------------------------------------------------------ Hero */
+
 const heroWords: Variants = {
   hidden: {},
-  visible: { transition: { staggerChildren: 0.06, delayChildren: 0.2 } },
+  visible: { transition: { staggerChildren: 0.07, delayChildren: 0.25 } },
 };
 const heroWord: Variants = {
-  hidden: { opacity: 0, y: "0.45em" },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: EASE } },
+  hidden: { opacity: 0, y: "0.5em" },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: EASE } },
 };
 
 function Hero({ t }: { t: Dict }) {
   const reduce = useReducedMotion();
   const words = t.hero.title.split(" ");
-  const afterTitle = 0.2 + words.length * 0.06;
+  const afterTitle = 0.25 + words.length * 0.07 + 0.2;
   const item = (delay: number) => ({
-    initial: reduce ? false : { opacity: 0, y: 20 },
+    initial: reduce ? false : { opacity: 0, y: 18 },
     animate: { opacity: 1, y: 0 },
-    transition: { duration: 0.5, ease: EASE, delay },
+    transition: { duration: 0.6, ease: EASE, delay },
   });
 
   return (
-    <section className="relative isolate overflow-hidden bg-brand-900">
+    <section className="grain relative flex min-h-[100svh] flex-col overflow-hidden bg-night text-white">
       <motion.div
         className="absolute inset-0 -z-10 will-change-transform"
         initial={false}
-        animate={reduce ? { scale: 1 } : { scale: [1, 1.08] }}
+        animate={reduce ? { scale: 1 } : { scale: [1.02, 1.12] }}
         transition={
           reduce
             ? { duration: 0 }
-            : { duration: 22, ease: "easeInOut", repeat: Infinity, repeatType: "mirror" }
+            : {
+                duration: 26,
+                ease: "easeInOut",
+                repeat: Infinity,
+                repeatType: "mirror",
+              }
         }
       >
         <Photo
           src={photos.hero}
           alt=""
-          priority
+          eager
           sizes="100vw"
           className="h-full w-full"
+          imgClassName="object-[50%_60%]"
         />
       </motion.div>
-      <div className="absolute inset-0 -z-10 bg-gradient-to-r from-brand-950/95 via-brand-900/85 to-brand-800/50" />
-      <div className="absolute inset-x-0 bottom-0 -z-10 h-32 bg-gradient-to-t from-brand-950/60" />
+      <div className="absolute inset-0 -z-10 bg-gradient-to-b from-night/80 via-night/35 to-night/95" />
+      <div className="absolute inset-0 -z-10 bg-gradient-to-r from-night/85 via-night/40 to-transparent" />
 
-      <div className="mx-auto max-w-6xl px-4 pt-16 pb-20 sm:px-6 sm:pt-24 sm:pb-28 lg:pt-32 lg:pb-36">
-        <div className="max-w-3xl">
-          <motion.p
-            {...item(0.05)}
-            className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3.5 py-1.5 text-sm font-medium text-brand-100 ring-1 ring-white/15 backdrop-blur"
+      <div
+        className={`${WRAP} flex flex-1 flex-col justify-end pt-36 pb-10 sm:pb-12`}
+      >
+        <motion.div
+          {...item(0.1)}
+          className="flex items-center gap-4 text-[11px] font-medium tracking-[0.24em] text-white/70 uppercase"
+        >
+          <span className="h-px w-10 bg-brand-400" />
+          {t.hero.eyebrow}
+        </motion.div>
+
+        <motion.h1
+          variants={heroWords}
+          initial={reduce ? false : "hidden"}
+          animate="visible"
+          className="mt-6 max-w-[15ch] font-display text-[clamp(2.55rem,10.6vw,6.6rem)] leading-[0.98] font-semibold tracking-[-0.045em] text-balance hyphens-manual"
+        >
+          {words.map((w, i) => (
+            <Fragment key={`${w}-${i}`}>
+              <motion.span variants={heroWord} className="inline-block">
+                {w}
+              </motion.span>
+              {i < words.length - 1 && " "}
+            </Fragment>
+          ))}
+        </motion.h1>
+
+        <FlowLine
+          className="mt-8 max-w-[19rem] sm:max-w-md"
+          delay={afterTitle - 0.3}
+        />
+
+        <motion.p
+          {...item(afterTitle)}
+          className="mt-7 max-w-xl text-[17px] leading-relaxed text-white/75 sm:text-lg"
+        >
+          {t.hero.lead}
+        </motion.p>
+
+        <motion.div
+          {...item(afterTitle + 0.12)}
+          className="mt-9 grid grid-cols-2 gap-3 sm:flex sm:flex-wrap"
+        >
+          <a
+            href={company.phoneHref}
+            className={`pulse-ring relative ${btn.light}`}
           >
-            <span className="size-2 rounded-full bg-copper-500" />
-            {t.hero.eyebrow}
-          </motion.p>
-          <motion.h1
-            variants={heroWords}
-            initial={reduce ? false : "hidden"}
-            animate="visible"
-            className="mt-6 text-4xl leading-[1.08] font-extrabold tracking-tight text-balance text-white sm:text-5xl lg:text-6xl"
-          >
-            {words.map((w, i) => (
-              <Fragment key={`${w}-${i}`}>
-                <motion.span variants={heroWord} className="inline-block">
-                  {w}
-                </motion.span>
-                {i < words.length - 1 && " "}
-              </Fragment>
-            ))}
-          </motion.h1>
-          <motion.p
-            {...item(afterTitle)}
-            className="mt-6 max-w-2xl text-lg leading-relaxed text-brand-100 sm:text-xl"
-          >
-            {t.hero.lead}
-          </motion.p>
-          <motion.div
-            {...item(afterTitle + 0.12)}
-            className="mt-9 flex flex-col gap-3 sm:flex-row"
-          >
-            <a
-              href={company.phoneHref}
-              className={`pulse-ring relative inline-flex items-center justify-center gap-2.5 rounded-full bg-copper-600 px-7 py-4 text-lg font-semibold text-white shadow-lg shadow-black/20 hover:bg-copper-700 ${BTN}`}
+            <Phone className="size-4" aria-hidden />
+            {t.call}
+          </a>
+          <a href="#offert" className={btn.ghostLight}>
+            {t.hero.quote}
+            <Arrow />
+          </a>
+        </motion.div>
+
+        <motion.ul
+          {...item(afterTitle + 0.3)}
+          className="mt-14 grid grid-cols-3 border-t border-white/15 sm:mt-20"
+        >
+          {t.hero.facts.map((f, i) => (
+            <li
+              key={f}
+              className={`pt-4 pr-3 text-[12px] leading-snug text-white/75 sm:pt-5 sm:text-sm ${
+                i > 0 ? "border-l border-white/15 pl-3 sm:pl-6" : ""
+              }`}
             >
-              <Phone className="size-5" aria-hidden />
-              {t.call}
-            </a>
-            <a
-              href="#offert"
-              className={`group inline-flex items-center justify-center gap-2.5 rounded-full bg-white px-7 py-4 text-lg font-semibold text-brand-800 shadow-lg shadow-black/10 hover:bg-brand-50 ${BTN}`}
-            >
-              {t.hero.quote}
-              <ArrowRight
-                className="size-5 transition-transform duration-300 group-hover:translate-x-1 motion-reduce:group-hover:translate-x-0"
-                aria-hidden
-              />
-            </a>
-          </motion.div>
-          <motion.ul
-            {...item(afterTitle + 0.24)}
-            className="mt-10 flex flex-wrap gap-x-6 gap-y-2 text-sm font-medium text-white/80"
-          >
-            {t.hero.facts.map((f) => (
-              <li key={f} className="flex items-center gap-2">
-                <span className="size-1.5 rounded-full bg-copper-300" />
-                {f}
-              </li>
-            ))}
-          </motion.ul>
-        </div>
+              <span className="mb-1.5 block text-[10px] tracking-[0.2em] text-brand-400">
+                {pad(i + 1)}
+              </span>
+              {f}
+            </li>
+          ))}
+        </motion.ul>
       </div>
     </section>
   );
 }
 
+/* ----------------------------------------------------------------- Stats */
+
+function Stats({ t }: { t: Dict }) {
+  return (
+    <section className="border-b border-ink/10 bg-paper py-20 sm:py-28">
+      <div
+        className={`${WRAP} grid gap-14 lg:grid-cols-12 lg:items-end lg:gap-10`}
+      >
+        <Reveal className="lg:col-span-5">
+          <p className="font-display text-[1.65rem] leading-[1.25] font-medium tracking-[-0.02em] text-ink sm:text-[2rem]">
+            {t.why.lead}
+          </p>
+        </Reveal>
+        <dl className="grid grid-cols-3 lg:col-span-6 lg:col-start-7">
+          {t.why.stats.map((s, i) => (
+            <Reveal
+              key={s.label}
+              delay={i * 0.1}
+              className={`flex flex-col-reverse justify-end ${
+                i > 0 ? "border-l border-ink/12 pl-4 sm:pl-8" : "pr-2"
+              }`}
+            >
+              <dt className="mt-3 text-[12px] leading-snug text-steel-600 sm:text-sm">
+                {s.label}
+              </dt>
+              <dd className="font-display text-[2.15rem] leading-none font-medium tracking-[-0.05em] text-ink min-[400px]:text-[2.5rem] sm:text-6xl lg:text-7xl">
+                <CountUp value={s.value} />
+              </dd>
+            </Reveal>
+          ))}
+        </dl>
+      </div>
+    </section>
+  );
+}
+
+/* -------------------------------------------------------------- Services */
+
 function Services({ t }: { t: Dict }) {
   const reduce = useReducedMotion();
+  const row = useRef<HTMLDivElement>(null);
+  const { scrollXProgress } = useScroll({ container: row });
+  // Show where you are in the swipeable row (starts at one card's worth).
+  const progress = useTransform(scrollXProgress, [0, 1], [1 / 6, 1]);
   return (
-    <section id="tjanster" className="relative py-20 sm:py-28">
-      <PipeDivider />
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <SectionHeading kicker={t.services.kicker} title={t.services.title} lead={t.services.lead} />
-        <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 lg:gap-7">
+    <section id="tjanster" className="bg-paper py-24 sm:py-32">
+      <div className={WRAP}>
+        <SectionHead
+          index="01"
+          kicker={t.services.kicker}
+          title={t.services.title}
+          lead={t.services.lead}
+          aside={
+            <p className="mt-4 inline-flex items-center gap-2 text-xs text-steel-500">
+              <span className="size-1.5 rounded-full bg-brand-600" />
+              {t.services.placeholder}
+            </p>
+          }
+        />
+
+        {/* Swipeable row on phones and tablets, grid from lg. */}
+        <div
+          ref={row}
+          className="no-scrollbar -mx-5 mt-14 flex snap-x snap-mandatory scroll-px-5 gap-4 overflow-x-auto px-5 pb-2 sm:-mx-8 sm:scroll-px-8 sm:px-8 lg:mx-0 lg:mt-20 lg:grid lg:grid-cols-3 lg:gap-x-7 lg:gap-y-16 lg:overflow-visible lg:px-0 lg:pb-0"
+        >
           {serviceKeys.map((key, i) => {
             const Icon = serviceIcons[key];
             const s = t.services.items[key];
             return (
-              <Reveal key={key} delay={(i % 3) * 0.08} className="h-full">
-                <motion.div
-                  className="group relative isolate h-full"
+              <Reveal
+                key={key}
+                delay={(i % 3) * 0.08}
+                className="w-[82%] shrink-0 snap-start sm:w-[45%] lg:w-auto"
+              >
+                <motion.article
+                  className="group h-full"
                   whileHover={reduce ? undefined : { y: -6 }}
                   whileTap={reduce ? undefined : { scale: 0.985 }}
-                  transition={{ duration: 0.3, ease: EASE }}
+                  transition={{ duration: 0.35, ease: EASE }}
                 >
-                  <div
-                    aria-hidden
-                    className="absolute inset-0 -z-10 rounded-2xl shadow-[0_22px_45px_-14px_rgb(20_42_78/0.3)] opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-                  />
-                  <article className="flex h-full flex-col overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-steel-200">
-                    <div className="relative">
-                      <Photo
-                        src={photos[key]}
-                        alt={s.title}
-                        icon={Icon}
-                        className="aspect-[16/10] transition-transform duration-500 ease-out group-hover:scale-[1.04] motion-reduce:group-hover:scale-100"
+                  <div className="relative overflow-hidden rounded-[6px]">
+                    <Photo
+                      src={photos[key]}
+                      alt={s.title}
+                      icon={Icon}
+                      sizes="(min-width: 1024px) 30vw, 80vw"
+                      className="aspect-[4/5] transition-transform duration-700 ease-out group-hover:scale-[1.05] motion-reduce:group-hover:scale-100 sm:aspect-[4/3]"
+                    />
+                    <span className="absolute bottom-0 left-0 inline-flex size-14 items-center justify-center bg-night/85 text-white backdrop-blur-sm">
+                      <Icon
+                        className="size-5 transition-transform duration-300 ease-out group-hover:scale-110 group-hover:-rotate-6 motion-reduce:group-hover:scale-100 motion-reduce:group-hover:rotate-0"
+                        strokeWidth={1.5}
+                        aria-hidden
                       />
-                      <span className="absolute top-3 right-3 rounded-full bg-white/95 px-2.5 py-1 text-[11px] font-semibold text-copper-700 shadow-sm">
-                        {t.services.placeholder}
-                      </span>
+                    </span>
+                  </div>
+                  <div className="mt-5 flex items-baseline gap-4">
+                    <span className="text-[11px] tracking-[0.2em] text-brand-600">
+                      {pad(i + 1)}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="font-display text-xl font-semibold tracking-[-0.02em] text-ink sm:text-[1.4rem]">
+                        {s.title}
+                      </h3>
+                      <p className="mt-2 text-[15px] leading-relaxed text-steel-600">
+                        {s.text}
+                      </p>
+                      <span
+                        aria-hidden
+                        className="mt-5 block h-px w-full origin-left scale-x-[0.18] bg-ink/25 transition-transform duration-500 ease-out group-hover:scale-x-100"
+                      />
                     </div>
-                    <div className="flex flex-1 flex-col p-6">
-                      <div className="relative z-10 -mt-12 mb-4 inline-flex size-12 items-center justify-center rounded-xl bg-brand-600 text-white shadow-lg ring-4 ring-white transition-transform duration-300 ease-out group-hover:scale-110 group-hover:-rotate-6 motion-reduce:group-hover:scale-100 motion-reduce:group-hover:rotate-0">
-                        <Icon className="size-6" aria-hidden />
-                      </div>
-                      <h3 className="text-xl font-bold text-ink">{s.title}</h3>
-                      <p className="mt-2 leading-relaxed text-steel-600">{s.text}</p>
-                    </div>
-                  </article>
-                </motion.div>
+                  </div>
+                </motion.article>
               </Reveal>
             );
           })}
+        </div>
+        <div aria-hidden className="mt-8 h-px bg-ink/12 lg:hidden">
+          <motion.div
+            className="h-px origin-left bg-ink"
+            style={{ scaleX: progress }}
+          />
         </div>
       </div>
     </section>
   );
 }
 
+/* ---------------------------------------------------------------- Groups */
+
 function Groups({ t }: { t: Dict }) {
   return (
-    <section id="kunder" className="bg-steel-50 py-20 sm:py-28">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <SectionHeading kicker={t.groups.kicker} title={t.groups.title} />
-        <div className="mt-12 grid grid-cols-1 gap-4 min-[480px]:grid-cols-2 lg:grid-cols-4 lg:gap-6">
+    <section
+      id="kunder"
+      className="grain relative overflow-hidden bg-night py-24 text-white sm:py-32"
+    >
+      <div className={WRAP}>
+        <SectionHead
+          index="02"
+          kicker={t.groups.kicker}
+          title={t.groups.title}
+          tone="light"
+        />
+        <div className="mt-14 grid grid-cols-2 border-t border-white/12 lg:mt-20 lg:grid-cols-4">
           {groupKeys.map((key, i) => {
             const Icon = groupIcons[key];
             const g = t.groups.items[key];
             return (
-              <Reveal key={key} delay={(i % 4) * 0.08} className="h-full">
-                <div className="h-full rounded-2xl bg-white p-6 shadow-sm ring-1 ring-steel-200">
-                  <div className="inline-flex size-12 items-center justify-center rounded-full bg-brand-50 text-brand-600">
-                    <Icon className="size-6" aria-hidden />
-                  </div>
-                  <h3 className="mt-5 text-lg font-bold text-ink">{g.title}</h3>
-                  <p className="mt-1.5 leading-relaxed text-steel-600">{g.text}</p>
-                </div>
+              <Reveal
+                key={key}
+                delay={(i % 4) * 0.08}
+                className={`group relative py-8 pr-4 sm:py-10 sm:pr-8 ${
+                  i % 2 === 1 ? "border-l border-white/12 pl-5 sm:pl-8" : ""
+                } ${i >= 2 ? "border-t border-white/12 lg:border-t-0" : ""} ${
+                  i === 2 ? "lg:border-l lg:pl-8" : ""
+                }`}
+              >
+                <span className="text-[11px] tracking-[0.2em] text-brand-400">
+                  {pad(i + 1)}
+                </span>
+                <Icon
+                  className="mt-8 size-7 text-white/80 transition-transform duration-500 ease-out group-hover:-translate-y-1 motion-reduce:group-hover:translate-y-0"
+                  strokeWidth={1.25}
+                  aria-hidden
+                />
+                <h3 className="mt-5 font-display text-[1.15rem] font-semibold tracking-[-0.02em] hyphens-manual min-[400px]:text-[1.3rem] sm:text-2xl">
+                  {g.title}
+                </h3>
+                <p className="mt-2 text-[14px] leading-relaxed break-words hyphens-auto text-white/55 sm:text-[15px]">
+                  {g.text}
+                </p>
               </Reveal>
             );
           })}
@@ -304,128 +420,166 @@ function Groups({ t }: { t: Dict }) {
   );
 }
 
+/* ------------------------------------------------------------------- Why */
+
+function Why({ t }: { t: Dict }) {
+  return (
+    <section id="varfor" className="bg-paper py-24 sm:py-32">
+      <div
+        className={`${WRAP} grid gap-14 lg:grid-cols-12 lg:items-center lg:gap-10`}
+      >
+        <Reveal className="relative sm:mb-10 lg:col-span-6 lg:mb-0">
+          <Photo
+            src={photos.why}
+            alt=""
+            sizes="(min-width: 1024px) 45vw, 100vw"
+            className="aspect-[4/3] rounded-[6px] sm:aspect-[5/4] lg:aspect-[4/5]"
+          />
+          <div className="absolute -right-3 -bottom-10 hidden w-[46%] overflow-hidden rounded-[6px] shadow-2xl shadow-night/30 ring-8 ring-paper sm:block lg:-right-12">
+            <Photo
+              src={photos.detail}
+              alt=""
+              sizes="25vw"
+              className="aspect-[4/3]"
+            />
+          </div>
+        </Reveal>
+
+        <div className="lg:col-span-5 lg:col-start-8">
+          <Reveal>
+            <Label index="03" text={t.why.kicker} />
+            <h2 className="mt-6 font-display text-[2.4rem] leading-[1.04] font-semibold tracking-[-0.035em] text-balance text-ink sm:text-5xl">
+              {t.why.title}
+            </h2>
+          </Reveal>
+          <ol className="mt-10 border-t border-ink/12">
+            {t.why.items.map((w, i) => (
+              <li key={w.title} className="border-b border-ink/12">
+                <Reveal
+                  delay={i * 0.08}
+                  className="grid grid-cols-[2.5rem_1fr] gap-x-3 py-6"
+                >
+                  <span className="pt-1 text-[11px] tracking-[0.2em] text-brand-600">
+                    {pad(i + 1)}
+                  </span>
+                  <div>
+                    <h3 className="font-display text-xl font-semibold tracking-[-0.02em] text-ink">
+                      {w.title}
+                    </h3>
+                    <p className="mt-1.5 text-[15px] leading-relaxed text-steel-600">
+                      {w.text}
+                    </p>
+                  </div>
+                </Reveal>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ------------------------------------------------------------------ Shop */
+
 function Shop({ t }: { t: Dict }) {
   return (
-    <section id="butik" className="relative py-20 sm:py-28">
-      <PipeDivider />
-      <div className="mx-auto grid max-w-6xl items-start gap-10 px-4 sm:px-6 lg:grid-cols-2 lg:gap-14">
-        <div>
-          <SectionHeading kicker={t.shop.kicker} title={t.shop.title} lead={t.shop.lead} />
+    <section id="butik" className="bg-white py-24 sm:py-32">
+      <div className={`${WRAP} grid gap-12 lg:grid-cols-12 lg:gap-10`}>
+        <Reveal className="relative lg:col-span-7">
+          <Photo
+            src={photos.shop}
+            alt={t.shop.title}
+            sizes="(min-width: 1024px) 55vw, 100vw"
+            className="aspect-[4/3] rounded-[6px] lg:aspect-auto lg:h-full lg:min-h-[34rem]"
+          />
+          <div className="absolute bottom-4 left-4 rounded-[4px] bg-night/90 px-5 py-4 text-white backdrop-blur-md sm:bottom-6 sm:left-6 sm:px-6 sm:py-5">
+            <p className="flex items-center gap-2 text-[11px] tracking-[0.2em] text-white/60 uppercase">
+              <Clock className="size-3.5" aria-hidden />
+              {t.shop.hoursLabel}
+            </p>
+            <p className="mt-1.5 font-display text-xl font-semibold tracking-[-0.01em] sm:text-2xl">
+              {t.shop.hours}
+            </p>
+          </div>
+        </Reveal>
+
+        <div className="flex flex-col lg:col-span-5">
+          <Reveal>
+            <Label index="04" text={t.shop.kicker} />
+            <h2 className="mt-6 font-display text-[2.4rem] leading-[1.04] font-semibold tracking-[-0.035em] text-balance text-ink sm:text-5xl">
+              {t.shop.title}
+            </h2>
+            <p className="mt-5 text-[17px] leading-relaxed text-steel-600">
+              {t.shop.lead}
+            </p>
+          </Reveal>
+
           <Reveal delay={0.1}>
-            <dl className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
-              <div className="rounded-2xl bg-brand-600 p-6 text-white shadow-lg">
-                <dt className="flex items-center gap-2 text-sm font-semibold text-brand-100">
-                  <Clock className="size-4" aria-hidden />
-                  {t.shop.hoursLabel}
-                </dt>
-                <dd className="mt-2 text-xl font-bold">{t.shop.hours}</dd>
-                <dd className="mt-1 text-sm text-brand-100">{t.shop.weekend}</dd>
+            <dl className="mt-10 border-t border-ink/12 text-[15px]">
+              <div className="grid grid-cols-[7.5rem_1fr] gap-3 border-b border-ink/12 py-4">
+                <dt className="text-steel-500">{t.shop.hoursLabel}</dt>
+                <dd className="text-ink">
+                  {t.shop.hours}
+                  <span className="block text-steel-500">{t.shop.weekend}</span>
+                </dd>
               </div>
-              <div className="rounded-2xl bg-steel-50 p-6 ring-1 ring-steel-200">
-                <dt className="flex items-center gap-2 text-sm font-semibold text-steel-600">
-                  <MapPin className="size-4" aria-hidden />
-                  {t.shop.addressLabel}
-                </dt>
-                <dd className="mt-2 text-xl font-bold text-ink">{company.street}</dd>
-                <dd className="mt-1 text-steel-600">{company.postal}</dd>
+              <div className="grid grid-cols-[7.5rem_1fr] gap-3 border-b border-ink/12 py-4">
+                <dt className="text-steel-500">{t.shop.addressLabel}</dt>
+                <dd className="text-ink">
+                  {company.street}
+                  <span className="block">{company.postal}</span>
+                </dd>
               </div>
             </dl>
             <a
               href={directionsHref}
               target="_blank"
               rel="noopener noreferrer"
-              className={`mt-6 inline-flex items-center gap-2 rounded-full border-2 border-brand-600 px-6 py-3 font-semibold text-brand-700 hover:bg-brand-600 hover:text-white ${BTN}`}
+              className={`mt-8 ${btn.ghostDark}`}
             >
-              <Navigation className="size-4" aria-hidden />
+              <MapPin className="size-4" aria-hidden />
               {t.shop.directions}
+              <Arrow />
             </a>
           </Reveal>
-        </div>
-        <Reveal delay={0.15} className="grid gap-4">
-          <Photo
-            src={photos.shop}
-            alt={t.shop.title}
-            icon={Store}
-            sizes="(min-width: 1024px) 50vw, 100vw"
-            className="hidden aspect-[16/9] rounded-2xl shadow-lg sm:block"
-          />
-          <div className="overflow-hidden rounded-2xl shadow-lg ring-1 ring-steel-200">
-            <iframe
-              title={t.shop.mapTitle}
-              src={mapSrc}
-              className="block h-72 w-full sm:h-80"
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-            />
-          </div>
-        </Reveal>
-      </div>
-    </section>
-  );
-}
 
-function Why({ t }: { t: Dict }) {
-  return (
-    <section id="varfor" className="relative isolate overflow-hidden bg-brand-900 py-20 sm:py-28">
-      <PipeDivider light />
-      <div aria-hidden className="photo-fallback absolute inset-0 -z-10 opacity-60" />
-      <div className="mx-auto grid max-w-6xl gap-12 px-4 sm:px-6 lg:grid-cols-[1.1fr_1fr] lg:items-center lg:gap-16">
-        <div>
-          <SectionHeading kicker={t.why.kicker} title={t.why.title} lead={t.why.lead} light />
-          <div className="mt-10 grid gap-6">
-            {t.why.items.map((w, i) => {
-              const Icon = whyIcons[i];
-              return (
-                <Reveal key={w.title} delay={i * 0.08}>
-                  <div className="flex gap-4">
-                    <div className="inline-flex size-12 shrink-0 items-center justify-center rounded-xl bg-copper-600 text-white">
-                      <Icon className="size-6" aria-hidden />
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-bold text-white">{w.title}</h3>
-                      <p className="mt-1 leading-relaxed text-brand-100">{w.text}</p>
-                    </div>
-                  </div>
-                </Reveal>
-              );
-            })}
-          </div>
-        </div>
-        <Reveal delay={0.1}>
-          <div className="relative">
-            <Photo
-              src={photos.why}
-              alt=""
-              icon={Wrench}
-              sizes="(min-width: 1024px) 45vw, 100vw"
-              className="aspect-[4/3] rounded-2xl shadow-2xl ring-1 ring-white/10"
-            />
-            <div className="relative -mt-10 mx-3 grid grid-cols-3 divide-x divide-steel-200 rounded-2xl bg-white p-4 shadow-xl sm:mx-6 sm:p-5">
-              {t.why.stats.map((s) => (
-                <div key={s.label} className="px-2 text-center">
-                  <p className="text-2xl font-extrabold text-brand-600 sm:text-3xl">
-                    <CountUp value={s.value} />
-                  </p>
-                  <p className="mt-1 text-xs leading-snug font-medium text-steel-600 sm:text-sm">
-                    {s.label}
-                  </p>
-                </div>
-              ))}
+          <Reveal delay={0.15} className="mt-10 lg:mt-auto lg:pt-10">
+            <div className="overflow-hidden rounded-[6px] border border-ink/10 bg-paper">
+              <iframe
+                title={t.shop.mapTitle}
+                src={mapSrc}
+                className="block h-64 w-full grayscale-[0.85]"
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+              />
             </div>
-          </div>
-        </Reveal>
+          </Reveal>
+        </div>
       </div>
     </section>
   );
 }
 
-function Contact({ t, lang }: { t: Dict; lang: "sv" | "fi" }) {
+/* --------------------------------------------------------------- Contact */
+
+function Contact({ t, lang }: { t: Dict; lang: Lang }) {
+  const reduce = useReducedMotion();
+  const lift = reduce ? undefined : { y: -4 };
   return (
-    <section id="kontakt" className="relative py-20 sm:py-28">
-      <PipeDivider />
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <SectionHeading kicker={t.contact.kicker} title={t.contact.title} lead={t.contact.lead} />
-        <div className="mt-12 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
+    <section
+      id="kontakt"
+      className="border-t border-ink/10 bg-paper py-24 sm:py-32"
+    >
+      <div className={WRAP}>
+        <SectionHead
+          index="06"
+          kicker={t.contact.kicker}
+          title={t.contact.title}
+          lead={t.contact.lead}
+        />
+
+        <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:mt-20 lg:grid-cols-4 lg:gap-5">
           {people.map((p, i) => {
             const initials = p.name
               .split(" ")
@@ -433,79 +587,89 @@ function Contact({ t, lang }: { t: Dict; lang: "sv" | "fi" }) {
               .join("");
             return (
               <Reveal key={p.email} delay={(i % 4) * 0.08} className="h-full">
-                <div className="flex h-full flex-col rounded-2xl bg-white p-6 shadow-sm ring-1 ring-steel-200">
-                  <div className="flex items-center gap-4">
-                    <div
-                      aria-hidden
-                      className="inline-flex size-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-500 to-brand-800 text-lg font-bold text-white"
-                    >
-                      {initials}
-                    </div>
-                    <div className="min-w-0">
-                      <h3 className="text-lg font-bold text-ink">{p.name}</h3>
-                      {p.role && (
-                        <p className="text-sm font-medium text-copper-600">{p.role[lang]}</p>
-                      )}
-                    </div>
+                <motion.div
+                  className="flex h-full flex-col rounded-[6px] border border-ink/10 bg-white p-6 sm:p-7"
+                  whileHover={lift}
+                  transition={{ duration: 0.35, ease: EASE }}
+                >
+                  <div
+                    aria-hidden
+                    className="inline-flex size-14 items-center justify-center rounded-[4px] bg-paper font-display text-lg font-semibold tracking-tight text-ink"
+                  >
+                    {initials}
                   </div>
-                  <p className="mt-5 text-steel-700">{p.phone}</p>
-                  <p className="truncate text-sm text-steel-600" title={p.email}>
-                    {p.email}
+                  <h3 className="mt-6 font-display text-xl font-semibold tracking-[-0.02em] text-ink">
+                    {p.name}
+                  </h3>
+                  <p className="mt-1 min-h-5 text-[11px] tracking-[0.18em] text-brand-600 uppercase">
+                    {p.role?.[lang]}
                   </p>
-                  <div className="mt-auto grid grid-cols-2 gap-2 pt-5">
+                  <div className="mt-5 border-t border-ink/10 pt-4 text-[14px] leading-7">
+                    <p className="text-ink">{p.phone}</p>
+                    <p className="truncate text-steel-600" title={p.email}>
+                      {p.email}
+                    </p>
+                  </div>
+                  <div className="mt-auto grid grid-cols-2 gap-2 pt-6">
                     <a
                       href={p.phoneHref}
-                      className={`inline-flex items-center justify-center gap-1.5 rounded-full bg-brand-600 px-3 py-3 text-sm font-semibold text-white hover:bg-brand-700 ${BTN}`}
+                      className={`inline-flex h-11 items-center justify-center gap-2 rounded-[3px] bg-ink text-[13px] font-medium text-white hover:bg-brand-600 ${BTN}`}
                     >
-                      <Phone className="size-4" aria-hidden />
+                      <Phone className="size-3.5" aria-hidden />
                       {t.contact.call}
                     </a>
                     <a
                       href={`mailto:${p.email}`}
-                      className={`inline-flex items-center justify-center gap-1.5 rounded-full bg-brand-50 px-3 py-3 text-sm font-semibold text-brand-700 hover:bg-brand-100 ${BTN}`}
+                      className={`inline-flex h-11 items-center justify-center gap-2 rounded-[3px] border border-ink/15 text-[13px] font-medium text-ink hover:border-ink/40 ${BTN}`}
                     >
-                      <Mail className="size-4" aria-hidden />
+                      <Mail className="size-3.5" aria-hidden />
                       {t.contact.email}
                     </a>
                   </div>
-                </div>
+                </motion.div>
               </Reveal>
             );
           })}
 
           <Reveal delay={0.24} className="h-full">
-            <div className="flex h-full flex-col rounded-2xl bg-steel-800 p-6 text-white shadow-sm">
-              <div className="flex items-center gap-4">
-                <div className="inline-flex size-14 shrink-0 items-center justify-center rounded-full bg-white/10">
-                  <Store className="size-6" aria-hidden />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold">{t.contact.office}</h3>
-                  <p className="text-sm text-steel-300">{company.name}</p>
-                </div>
+            <motion.div
+              className="grain relative flex h-full flex-col overflow-hidden rounded-[6px] bg-night p-6 text-white sm:p-7"
+              whileHover={lift}
+              transition={{ duration: 0.35, ease: EASE }}
+            >
+              <div className="flex h-14 items-center">
+                <Logo tone="light" className="h-6 w-auto" />
               </div>
-              <p className="mt-5 text-white/90">{company.phone}</p>
-              <p className="text-sm text-steel-300">{company.email}</p>
-              <p className="mt-2 text-sm text-steel-300">
-                {company.street}, {company.postal}
+              <h3 className="mt-6 font-display text-xl font-semibold tracking-[-0.02em]">
+                {t.contact.office}
+              </h3>
+              <p className="mt-1 min-h-5 text-[11px] tracking-[0.18em] text-brand-400 uppercase">
+                {company.name}
               </p>
-              <div className="mt-auto grid grid-cols-2 gap-2 pt-5">
+              <div className="mt-5 border-t border-white/12 pt-4 text-[14px] leading-7">
+                <p>{company.phone}</p>
+                <p className="text-white/60">{company.email}</p>
+                <p className="text-white/60">
+                  {company.street}, {company.postal}
+                </p>
+              </div>
+              <div className="mt-auto grid grid-cols-2 gap-2 pt-6">
                 <a
                   href={company.phoneHref}
-                  className={`inline-flex items-center justify-center gap-1.5 rounded-full bg-copper-600 px-3 py-3 text-sm font-semibold text-white hover:bg-copper-700 ${BTN}`}
+                  className={`inline-flex h-11 items-center justify-center gap-2 rounded-[3px] bg-brand-600 text-[13px] font-medium text-white hover:bg-brand-500 ${BTN}`}
                 >
-                  <Phone className="size-4" aria-hidden />
+                  <Phone className="size-3.5" aria-hidden />
                   {t.contact.call}
                 </a>
                 <a
                   href={`mailto:${company.email}`}
-                  className={`inline-flex items-center justify-center gap-1.5 rounded-full bg-white/10 px-3 py-3 text-sm font-semibold text-white hover:bg-white/20 ${BTN}`}
+                  className={`inline-flex h-11 items-center justify-center gap-2 rounded-[3px] border border-white/20 text-[13px] font-medium text-white hover:border-white/50 ${BTN}`}
                 >
-                  <Mail className="size-4" aria-hidden />
+                  <Mail className="size-3.5" aria-hidden />
                   {t.contact.email}
                 </a>
               </div>
-            </div>
+            </motion.div>
           </Reveal>
         </div>
       </div>
@@ -513,28 +677,89 @@ function Contact({ t, lang }: { t: Dict; lang: "sv" | "fi" }) {
   );
 }
 
+/* ----------------------------------------------------------------- Quote */
+
 function Quote({ t }: { t: Dict }) {
+  const rows = [
+    {
+      Icon: Phone,
+      label: t.call,
+      value: company.phone,
+      href: company.phoneHref,
+    },
+    {
+      Icon: Mail,
+      label: t.contact.email,
+      value: company.email,
+      href: `mailto:${company.email}`,
+    },
+    { Icon: Clock, label: t.shop.hoursLabel, value: t.shop.hours, href: null },
+  ];
   return (
-    <section id="offert" className="bg-gradient-to-b from-steel-50 to-brand-50 py-20 sm:py-28">
-      <div className="mx-auto grid max-w-6xl gap-10 px-4 sm:px-6 lg:grid-cols-[1fr_1.4fr] lg:gap-14">
-        <div>
-          <SectionHeading kicker={t.form.kicker} title={t.form.title} lead={t.form.lead} />
+    <section
+      id="offert"
+      className="grain relative overflow-hidden bg-night py-24 text-white sm:py-32"
+    >
+      <div className="absolute inset-0 -z-10 opacity-25">
+        <Photo
+          src={photos.detail}
+          alt=""
+          sizes="100vw"
+          className="h-full w-full"
+        />
+      </div>
+      <div className="absolute inset-0 -z-10 bg-gradient-to-r from-night via-night/90 to-night/70" />
+
+      <div className={`${WRAP} grid gap-14 lg:grid-cols-12 lg:gap-10`}>
+        <div className="lg:col-span-5">
+          <Reveal>
+            <Label index="07" text={t.form.kicker} tone="light" />
+            <h2 className="mt-6 font-display text-[2.8rem] leading-[1] font-semibold tracking-[-0.04em] sm:text-6xl lg:text-7xl">
+              {t.form.title}
+            </h2>
+            <p className="mt-6 max-w-md text-[17px] leading-relaxed text-white/65">
+              {t.form.lead}
+            </p>
+          </Reveal>
+
           <Reveal delay={0.1}>
-            <a
-              href={company.phoneHref}
-              className={`mt-8 flex items-center gap-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-steel-200 hover:ring-brand-300 ${BTN}`}
-            >
-              <span className="inline-flex size-12 items-center justify-center rounded-full bg-copper-600 text-white">
-                <Phone className="size-5" aria-hidden />
-              </span>
-              <span>
-                <span className="block text-sm text-steel-600">{t.call}</span>
-                <span className="block text-xl font-bold text-ink">{company.phone}</span>
-              </span>
-            </a>
+            <ul className="mt-12 border-t border-white/12 text-[15px]">
+              {rows.map(({ Icon, label, value, href }) => {
+                const inner = (
+                  <>
+                    <Icon
+                      className="size-4 shrink-0 text-brand-400"
+                      strokeWidth={1.5}
+                      aria-hidden
+                    />
+                    <span className="text-white/50">{label}</span>
+                    <span className="ml-auto text-right text-white">
+                      {value}
+                    </span>
+                  </>
+                );
+                return (
+                  <li key={label} className="border-b border-white/12">
+                    {href ? (
+                      <a
+                        href={href}
+                        className="flex items-center gap-4 py-4 transition-opacity hover:opacity-80"
+                      >
+                        {inner}
+                      </a>
+                    ) : (
+                      <div className="flex items-center gap-4 py-4">
+                        {inner}
+                      </div>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
           </Reveal>
         </div>
-        <Reveal delay={0.1}>
+
+        <Reveal delay={0.1} className="lg:col-span-6 lg:col-start-7">
           <QuoteForm t={t} />
         </Reveal>
       </div>
@@ -542,44 +767,93 @@ function Quote({ t }: { t: Dict }) {
   );
 }
 
+/* ---------------------------------------------------------------- Footer */
+
 function Footer({ t }: { t: Dict }) {
+  const links = [
+    ["#tjanster", t.nav.services],
+    ["#kunder", t.nav.customers],
+    ["#butik", t.nav.shop],
+    ["#galleri", t.nav.gallery],
+    ["#kontakt", t.nav.contact],
+    ["#offert", t.nav.quote],
+  ] as const;
+
   return (
-    <footer className="bg-brand-950 text-steel-300">
-      <div className="mx-auto grid max-w-6xl gap-10 px-4 py-14 sm:px-6 md:grid-cols-3">
-        <div>
-          <div className="inline-block rounded-lg bg-white px-3 py-2">
-            <Logo className="h-7 w-auto" />
-          </div>
-          <p className="mt-3 text-sm">{t.tagline}</p>
-        </div>
-        <div className="text-sm leading-7">
-          <p className="font-semibold text-white">{company.name}</p>
-          <p>
-            {t.footer.businessId} {company.businessId}
-          </p>
-          <p>{company.street}</p>
-          <p>{company.postal}</p>
-        </div>
-        <div className="text-sm leading-7">
-          <p>
-            <a href={company.phoneHref} className="hover:text-white">
+    <footer className="grain relative overflow-hidden border-t border-white/10 bg-night text-white/60">
+      <div className={`${WRAP} pt-20 pb-10 sm:pt-24`}>
+        <div className="grid gap-12 border-b border-white/10 pb-14 sm:grid-cols-2 lg:grid-cols-12 lg:gap-8">
+          <div className="lg:col-span-4">
+            <Logo tone="light" className="h-8 w-auto" />
+            <p className="mt-4 text-sm">{t.tagline}</p>
+            <a href={company.phoneHref} className={`mt-8 ${btn.blue}`}>
+              <Phone className="size-4" aria-hidden />
               {company.phone}
             </a>
-          </p>
-          <p>
-            <a href={`mailto:${company.email}`} className="hover:text-white">
-              {company.email}
-            </a>
-          </p>
-          <p>{t.shop.hours}</p>
+          </div>
+
+          <div className="text-sm leading-7 lg:col-span-3 lg:col-start-6">
+            <p className="mb-3 text-[11px] tracking-[0.2em] text-white/40 uppercase">
+              {company.name}
+            </p>
+            <p>
+              {t.footer.businessId} {company.businessId}
+            </p>
+            <p>{company.street}</p>
+            <p>{company.postal}</p>
+            <p className="mt-3">
+              <a
+                href={`mailto:${company.email}`}
+                className="text-white hover:text-brand-300"
+              >
+                {company.email}
+              </a>
+            </p>
+          </div>
+
+          <div className="text-sm leading-7 lg:col-span-2">
+            <p className="mb-3 text-[11px] tracking-[0.2em] text-white/40 uppercase">
+              {t.shop.hoursLabel}
+            </p>
+            <p className="text-white">{t.shop.hours}</p>
+            <p>{t.shop.weekend}</p>
+          </div>
+
+          <nav className="text-sm leading-7 lg:col-span-2">
+            <p className="mb-3 text-[11px] tracking-[0.2em] text-white/40 uppercase">
+              {t.menu}
+            </p>
+            <ul>
+              {links.map(([href, label]) => (
+                <li key={href}>
+                  <a href={href} className="transition-colors hover:text-white">
+                    {label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
         </div>
-      </div>
-      <div className="border-t border-white/10">
-        <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-6 text-xs sm:flex-row sm:justify-between sm:px-6">
+
+        <Logo tone="light" className="mt-12 h-auto w-full opacity-[0.07]" />
+
+        <div className="mt-8 flex flex-col gap-3 text-xs sm:flex-row sm:items-center sm:justify-between">
           <p>
             © {new Date().getFullYear()} {company.name}. {t.footer.rights}
           </p>
-          <p>{t.footer.site}: Fusion Sites</p>
+          <div className="flex items-center gap-6">
+            <p>{t.footer.site}: Fusion Sites</p>
+            <a
+              href="#top"
+              className="group inline-flex items-center gap-2 text-white/80 hover:text-white"
+            >
+              {t.footer.top}
+              <ArrowUp
+                className="size-3.5 transition-transform duration-300 group-hover:-translate-y-0.5 motion-reduce:group-hover:translate-y-0"
+                aria-hidden
+              />
+            </a>
+          </div>
         </div>
       </div>
     </footer>

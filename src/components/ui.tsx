@@ -1,12 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import {
-  animate,
-  motion,
-  useInView,
-  useReducedMotion,
-} from "framer-motion";
+import { animate, motion, useInView, useReducedMotion } from "framer-motion";
+import { ArrowRight } from "lucide-react";
 import {
   useEffect,
   useRef,
@@ -15,7 +11,41 @@ import {
   type ReactNode,
 } from "react";
 
-export function Logo({ className = "" }: { className?: string }) {
+export const EASE = [0.22, 1, 0.36, 1] as const;
+
+/** Shared hover/press feedback for buttons (transform only). */
+export const BTN =
+  "transition duration-200 ease-out hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.97] motion-reduce:translate-none motion-reduce:scale-none";
+
+const BTN_BASE = `group inline-flex h-13 items-center justify-center gap-2.5 whitespace-nowrap rounded-[3px] px-4 text-[14px] font-medium tracking-wide sm:gap-3 sm:px-6 sm:text-[15px] ${BTN}`;
+
+/** Refined button styles. `light`/`blue` are solid, `ghost*` are outlined. */
+export const btn = {
+  light: `${BTN_BASE} bg-white text-ink hover:bg-paper`,
+  blue: `${BTN_BASE} bg-brand-600 text-white hover:bg-brand-700`,
+  dark: `${BTN_BASE} bg-ink text-white hover:bg-night-2`,
+  ghostLight: `${BTN_BASE} border border-white/30 text-white hover:border-white/60 hover:bg-white/5`,
+  ghostDark: `${BTN_BASE} border border-ink/20 text-ink hover:border-ink/50`,
+};
+
+/** Arrow that nudges right when its parent `group` is hovered. */
+export function Arrow({ className = "" }: { className?: string }) {
+  return (
+    <ArrowRight
+      aria-hidden
+      className={`size-4 transition-transform duration-300 ease-out group-hover:translate-x-1 motion-reduce:group-hover:translate-x-0 ${className}`}
+    />
+  );
+}
+
+export function Logo({
+  className = "",
+  tone = "dark",
+}: {
+  className?: string;
+  /** `light` for use on dark backgrounds. */
+  tone?: "dark" | "light";
+}) {
   return (
     <svg
       viewBox="0 0 210 44"
@@ -31,25 +61,33 @@ export function Logo({ className = "" }: { className?: string }) {
         letterSpacing={-0.5}
       >
         <text x="2" y="36">
-          <tspan fill="var(--color-steel-500)">RÖR</tspan>
-          <tspan fill="var(--color-brand-600)">TEAM</tspan>
+          <tspan
+            fill={tone === "light" ? "#c3cbd4" : "var(--color-steel-500)"}
+            style={{ transition: "fill 0.3s" }}
+          >
+            RÖR
+          </tspan>
+          <tspan
+            fill={
+              tone === "light"
+                ? "var(--color-brand-400)"
+                : "var(--color-brand-600)"
+            }
+            style={{ transition: "fill 0.3s" }}
+          >
+            TEAM
+          </tspan>
         </text>
       </g>
     </svg>
   );
 }
 
-export const EASE = [0.22, 1, 0.36, 1] as const;
-
-/** Shared hover/press feedback for buttons (transform only). */
-export const BTN =
-  "transition duration-200 ease-out hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.97] motion-reduce:translate-none motion-reduce:scale-none";
-
 export function Reveal({
   children,
   delay = 0,
   className,
-  y = 20,
+  y = 24,
 }: {
   children: ReactNode;
   delay?: number;
@@ -63,7 +101,7 @@ export function Reveal({
       initial={reduce ? false : { opacity: 0, y }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-60px" }}
-      transition={{ duration: 0.55, ease: EASE, delay }}
+      transition={{ duration: 0.6, ease: EASE, delay }}
     >
       {children}
     </motion.div>
@@ -97,7 +135,7 @@ export function CountUp({
     }
     const el = ref.current;
     const controls = animate(from, target, {
-      duration: target >= 1000 ? 1.4 : 1,
+      duration: target >= 1000 ? 1.6 : 1.1,
       ease: [0.16, 1, 0.3, 1],
       onUpdate: (v) => {
         el.textContent = String(Math.round(v));
@@ -113,125 +151,182 @@ export function CountUp({
   );
 }
 
-/** A thin pipe run with rounded bends that draws itself in on scroll. */
-export function PipeDivider({ light = false }: { light?: boolean }) {
+/** "01 ——— Tjänster" style section label. */
+export function Label({
+  index,
+  text,
+  tone = "dark",
+  className = "",
+}: {
+  index: string;
+  text: string;
+  tone?: "dark" | "light";
+  className?: string;
+}) {
   const reduce = useReducedMotion();
-  const draw = {
-    initial: reduce ? false : { pathLength: 0, opacity: 0 },
-    whileInView: { pathLength: 1, opacity: 1 },
-    viewport: { once: true, margin: "-40px" },
-  } as const;
-  // [x, y, delay]: each joint pops in as the line reaches it.
-  const joints = [
-    [214, 30, 0.55],
-    [236, 8, 0.62],
-    [364, 8, 0.8],
-    [386, 30, 0.87],
-  ];
   return (
     <div
-      aria-hidden
-      className="pointer-events-none absolute inset-x-0 top-6"
+      className={`flex items-center gap-4 text-[11px] font-medium tracking-[0.24em] uppercase ${
+        tone === "light" ? "text-white/60" : "text-steel-600"
+      } ${className}`}
     >
-      <svg
-        viewBox="0 0 600 40"
-        className="mx-auto block h-auto w-full max-w-6xl px-4 sm:px-6"
-        fill="none"
-      >
-        <motion.path
-          d="M0 30 H206 Q218 30 218 18 V16 Q218 8 228 8 H372 Q382 8 382 16 V18 Q382 30 394 30 H600"
-          stroke={light ? "rgb(255 255 255 / 0.22)" : "var(--color-brand-200)"}
-          strokeWidth={2}
-          strokeLinecap="round"
-          vectorEffect="non-scaling-stroke"
-          {...draw}
-          transition={{ duration: 1.4, ease: "easeInOut" }}
-        />
-        {joints.map(([cx, cy, delay], i) => (
-          <motion.circle
-            key={i}
-            cx={cx}
-            cy={cy}
-            r={2.6}
-            fill={light ? "var(--color-copper-300)" : "var(--color-copper-500)"}
-            initial={reduce ? false : { opacity: 0, scale: 0 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true, margin: "-40px" }}
-            transition={{ duration: 0.3, delay, ease: EASE }}
-            style={{ transformBox: "fill-box", transformOrigin: "center" }}
-          />
-        ))}
-      </svg>
+      <span className={tone === "light" ? "text-brand-400" : "text-brand-600"}>
+        {index}
+      </span>
+      <motion.span
+        aria-hidden
+        className={`h-px w-10 origin-left ${tone === "light" ? "bg-white/30" : "bg-ink/25"}`}
+        initial={reduce ? false : { scaleX: 0 }}
+        whileInView={{ scaleX: 1 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.8, ease: EASE, delay: 0.1 }}
+      />
+      <span>{text}</span>
     </div>
   );
 }
 
-export function SectionHeading({
+/**
+ * Asymmetric section header: label + large title on the left, an optional
+ * short lead (and extra content) in a narrow right column on desktop.
+ */
+export function SectionHead({
+  index,
   kicker,
   title,
   lead,
-  light = false,
-  center = false,
+  tone = "dark",
+  aside,
 }: {
+  index: string;
   kicker: string;
   title: string;
   lead?: string;
-  light?: boolean;
-  center?: boolean;
+  tone?: "dark" | "light";
+  aside?: ReactNode;
 }) {
+  const light = tone === "light";
   return (
-    <Reveal className={center ? "mx-auto max-w-2xl text-center" : "max-w-2xl"}>
-      <p
-        className={`text-sm font-semibold uppercase tracking-[0.14em] ${
-          light ? "text-copper-300" : "text-copper-600"
-        }`}
-      >
-        {kicker}
-      </p>
-      <h2
-        className={`mt-3 text-3xl font-bold tracking-tight text-balance sm:text-4xl ${
-          light ? "text-white" : "text-ink"
-        }`}
-      >
-        {title}
-      </h2>
-      {lead && (
-        <p
-          className={`mt-4 text-lg leading-relaxed ${
-            light ? "text-brand-100" : "text-steel-600"
+    <div className="grid gap-6 lg:grid-cols-12 lg:items-end lg:gap-10">
+      <Reveal className="lg:col-span-7">
+        <Label index={index} text={kicker} tone={tone} />
+        <h2
+          className={`mt-6 font-display text-[2.5rem] leading-[1.02] font-semibold tracking-[-0.035em] text-balance sm:text-5xl lg:text-[3.6rem] ${
+            light ? "text-white" : "text-ink"
           }`}
         >
-          {lead}
-        </p>
+          {title}
+        </h2>
+      </Reveal>
+      {(lead || aside) && (
+        <Reveal delay={0.1} className="lg:col-span-4 lg:col-start-9">
+          {lead && (
+            <p
+              className={`text-base leading-relaxed sm:text-[17px] ${
+                light ? "text-white/65" : "text-steel-600"
+              }`}
+            >
+              {lead}
+            </p>
+          )}
+          {aside}
+        </Reveal>
       )}
-    </Reveal>
+    </div>
   );
 }
 
-/** Remote placeholder photo with a branded fallback if it fails to load. */
+/**
+ * A pipe run with rounded bends that draws itself in, then a soft pulse of
+ * "water" keeps flowing through it.
+ */
+export function FlowLine({
+  className = "",
+  delay = 0,
+}: {
+  className?: string;
+  delay?: number;
+}) {
+  const reduce = useReducedMotion();
+  const d =
+    "M2 34 H180 Q196 34 196 20 V18 Q196 6 210 6 H330 Q344 6 344 18 V20 Q344 34 358 34 H560";
+  return (
+    <svg
+      aria-hidden
+      viewBox="0 0 562 40"
+      fill="none"
+      className={`block h-auto w-full overflow-visible ${className}`}
+    >
+      <motion.path
+        d={d}
+        stroke="rgb(255 255 255 / 0.28)"
+        strokeWidth={1.5}
+        strokeLinecap="round"
+        initial={reduce ? false : { pathLength: 0 }}
+        animate={{ pathLength: 1 }}
+        transition={{ duration: 1.6, ease: [0.65, 0, 0.35, 1], delay }}
+      />
+      {!reduce && (
+        <motion.path
+          d={d}
+          stroke="url(#flow)"
+          strokeWidth={2.5}
+          strokeLinecap="round"
+          initial={{ pathLength: 0.14, pathOffset: -0.14, opacity: 0 }}
+          animate={{ pathOffset: [-0.14, 1], opacity: [0, 1, 1, 0] }}
+          transition={{
+            duration: 3.2,
+            ease: "easeInOut",
+            delay: delay + 1.4,
+            repeat: Infinity,
+            repeatDelay: 1.6,
+            opacity: {
+              times: [0, 0.1, 0.85, 1],
+              duration: 3.2,
+              delay: delay + 1.4,
+              repeat: Infinity,
+              repeatDelay: 1.6,
+            },
+          }}
+        />
+      )}
+      <defs>
+        <linearGradient id="flow" x1="0" x2="1" y1="0" y2="0">
+          <stop offset="0" stopColor="#84aae0" />
+          <stop offset="1" stopColor="#ffffff" />
+        </linearGradient>
+      </defs>
+    </svg>
+  );
+}
+
+/** Photo with a branded fallback if the file is missing or fails to load. */
 export function Photo({
   src,
   alt,
   className = "",
-  priority = false,
+  eager = false,
   sizes = "(min-width: 1024px) 33vw, 100vw",
   icon: Icon,
+  imgClassName = "",
 }: {
   src: string | null;
   alt: string;
   className?: string;
-  priority?: boolean;
+  /** Load immediately with high priority (hero). */
+  eager?: boolean;
   sizes?: string;
   icon?: ComponentType<{ className?: string; strokeWidth?: number }>;
+  imgClassName?: string;
 }) {
   const [failed, setFailed] = useState(false);
   return (
-    <div className={`relative overflow-hidden bg-brand-800 ${className}`}>
+    <div className={`relative overflow-hidden bg-night-2 ${className}`}>
       <div
         aria-hidden
         className="photo-fallback absolute inset-0 flex items-center justify-center"
       >
-        {Icon && <Icon className="size-20 text-white/25" strokeWidth={1.25} />}
+        {Icon && <Icon className="size-16 text-white/25" strokeWidth={1.25} />}
       </div>
       {src && !failed && (
         <Image
@@ -239,8 +334,9 @@ export function Photo({
           alt={alt}
           fill
           sizes={sizes}
-          priority={priority}
-          className="object-cover"
+          loading={eager ? "eager" : "lazy"}
+          fetchPriority={eager ? "high" : undefined}
+          className={`object-cover ${imgClassName}`}
           onError={() => setFailed(true)}
         />
       )}

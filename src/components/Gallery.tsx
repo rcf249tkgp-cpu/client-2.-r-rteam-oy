@@ -2,7 +2,13 @@
 
 import Image from "next/image";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { ChevronLeft, ChevronRight, Maximize2, X, type LucideIcon } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Plus,
+  X,
+  type LucideIcon,
+} from "lucide-react";
 import {
   useCallback,
   useEffect,
@@ -13,7 +19,17 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { gallery, type Dict, type Lang, type ServiceKey } from "@/lib/content";
-import { EASE, Photo, Reveal, SectionHeading } from "./ui";
+import { EASE, Photo, Reveal, SectionHead } from "./ui";
+
+/** Grid spans for the gallery mosaic (2 columns on phones, 6 on desktop). */
+const MOSAIC = [
+  "row-span-2 lg:col-span-2 lg:row-span-2",
+  "lg:col-span-4",
+  "row-span-2 lg:col-span-2 lg:row-span-2",
+  "lg:col-span-2",
+  "lg:col-span-2",
+  "lg:col-span-2",
+];
 
 export default function Gallery({
   t,
@@ -55,12 +71,30 @@ export default function Gallery({
   }, []);
 
   return (
-    <section id="galleri" className="bg-steel-50 py-20 sm:py-28">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <SectionHeading kicker={t.gallery.kicker} title={t.gallery.title} />
-        <div className="mt-12 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 lg:gap-5">
+    <section
+      id="galleri"
+      className="border-t border-ink/10 bg-paper py-24 sm:py-32"
+    >
+      <div className="mx-auto w-full max-w-7xl px-5 sm:px-8">
+        <SectionHead
+          index="05"
+          kicker={t.gallery.kicker}
+          title={t.gallery.title}
+          aside={
+            <p className="inline-flex items-center gap-2 text-xs text-steel-500">
+              <span className="size-1.5 rounded-full bg-brand-600" />
+              {t.gallery.note}
+            </p>
+          }
+        />
+        {/* Asymmetric mosaic; the pattern repeats every six photos. */}
+        <div className="mt-14 grid grid-flow-dense auto-rows-[9.5rem] grid-cols-2 gap-3 sm:auto-rows-[14rem] lg:mt-20 lg:auto-rows-[15rem] lg:grid-cols-6 lg:gap-4">
           {gallery.map((g, i) => (
-            <Reveal key={i} delay={(i % 3) * 0.08}>
+            <Reveal
+              key={i}
+              delay={(i % 3) * 0.08}
+              className={`h-full ${MOSAIC[i % MOSAIC.length]}`}
+            >
               <button
                 ref={(el) => {
                   thumbs.current[i] = el;
@@ -68,27 +102,27 @@ export default function Gallery({
                 type="button"
                 onClick={() => open(i)}
                 aria-label={`${t.gallery.open}: ${alt(i)}`}
-                className="group relative block w-full overflow-hidden rounded-xl shadow-sm ring-1 ring-steel-200 transition-transform duration-200 active:scale-[0.98] motion-reduce:scale-none sm:rounded-2xl"
+                className="group relative block h-full w-full overflow-hidden rounded-[6px] transition-transform duration-200 active:scale-[0.98] motion-reduce:scale-none"
               >
                 <Photo
                   src={g.src}
                   alt={alt(i)}
                   icon={icons[g.icon]}
-                  sizes="(min-width: 1024px) 33vw, 50vw"
-                  className="aspect-[4/3] transition-transform duration-500 ease-out group-hover:scale-105 motion-reduce:group-hover:scale-100"
+                  sizes="(min-width: 1024px) 40vw, 50vw"
+                  className="h-full w-full transition-transform duration-700 ease-out group-hover:scale-105 motion-reduce:group-hover:scale-100"
                 />
                 <span
                   aria-hidden
-                  className="absolute inset-0 bg-gradient-to-t from-brand-950/50 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                  className="absolute inset-0 bg-gradient-to-t from-night/60 via-night/0 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100"
                 />
                 <span
                   aria-hidden
-                  className="absolute top-2.5 right-2.5 inline-flex size-9 scale-90 items-center justify-center rounded-full bg-white/90 text-brand-700 opacity-0 shadow-sm transition duration-300 group-hover:scale-100 group-hover:opacity-100"
+                  className="absolute right-3 bottom-3 inline-flex size-10 scale-90 items-center justify-center rounded-full bg-white text-ink opacity-0 transition duration-300 group-hover:scale-100 group-hover:opacity-100"
                 >
-                  <Maximize2 className="size-4" />
+                  <Plus className="size-4" />
                 </span>
                 {!g.src && (
-                  <span className="absolute bottom-2.5 left-2.5 rounded-full bg-white/95 px-2.5 py-1 text-[11px] font-semibold text-copper-700 shadow-sm">
+                  <span className="absolute bottom-3 left-3 rounded-[3px] bg-white/95 px-2.5 py-1 text-[11px] font-medium text-ink">
                     {t.gallery.placeholder}
                   </span>
                 )}
@@ -152,7 +186,11 @@ function Lightbox({
   }, [isOpen, onClose, onStep]);
 
   // Portal target only exists in the browser (static HTML has no lightbox).
-  const isClient = useSyncExternalStore(noop, () => true, () => false);
+  const isClient = useSyncExternalStore(
+    noop,
+    () => true,
+    () => false,
+  );
   if (!isClient) return null;
 
   const item = index === null ? null : gallery[index];
@@ -174,7 +212,7 @@ function Lightbox({
         >
           <div
             aria-hidden
-            className="absolute inset-0 bg-brand-950/90 backdrop-blur-sm"
+            className="absolute inset-0 bg-night/95 backdrop-blur-sm"
             onClick={onClose}
           />
 
@@ -185,7 +223,7 @@ function Lightbox({
             exit={reduce ? undefined : { scale: 0.96, y: 8 }}
             transition={{ duration: 0.35, ease: EASE }}
           >
-            <div className="relative aspect-[4/3] max-h-[75vh] w-full overflow-hidden rounded-2xl sm:aspect-[3/2]">
+            <div className="relative aspect-[4/3] max-h-[75vh] w-full overflow-hidden rounded-[6px] sm:aspect-[3/2]">
               <AnimatePresence initial={false}>
                 <motion.div
                   key={index}
@@ -212,7 +250,12 @@ function Lightbox({
                       draggable={false}
                     />
                   ) : (
-                    <Photo src={null} alt={alt} icon={icons[item.icon]} className="h-full w-full" />
+                    <Photo
+                      src={null}
+                      alt={alt}
+                      icon={icons[item.icon]}
+                      className="h-full w-full"
+                    />
                   )}
                 </motion.div>
               </AnimatePresence>
@@ -225,10 +268,18 @@ function Lightbox({
               </p>
             </div>
 
-            <NavButton side="left" label={t.gallery.prev} onClick={() => onStep(-1)}>
+            <NavButton
+              side="left"
+              label={t.gallery.prev}
+              onClick={() => onStep(-1)}
+            >
               <ChevronLeft className="size-6" />
             </NavButton>
-            <NavButton side="right" label={t.gallery.next} onClick={() => onStep(1)}>
+            <NavButton
+              side="right"
+              label={t.gallery.next}
+              onClick={() => onStep(1)}
+            >
               <ChevronRight className="size-6" />
             </NavButton>
           </motion.div>
@@ -265,7 +316,7 @@ function NavButton({
       type="button"
       onClick={onClick}
       aria-label={label}
-      className={`absolute top-[calc(50%-1.25rem)] inline-flex size-11 -translate-y-1/2 items-center justify-center rounded-full bg-brand-950/40 text-white transition hover:bg-white/25 active:scale-95 sm:bg-white/10 ${
+      className={`absolute top-[calc(50%-1.25rem)] inline-flex size-11 -translate-y-1/2 items-center justify-center rounded-full bg-night/50 text-white transition hover:bg-white/25 active:scale-95 sm:bg-white/10 ${
         side === "left" ? "left-6 sm:left-1" : "right-6 sm:right-1"
       }`}
     >
