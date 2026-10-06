@@ -1,8 +1,19 @@
 "use client";
 
 import Image from "next/image";
-import { motion, useReducedMotion } from "framer-motion";
-import { useState, type ComponentType, type ReactNode } from "react";
+import {
+  animate,
+  motion,
+  useInView,
+  useReducedMotion,
+} from "framer-motion";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type ComponentType,
+  type ReactNode,
+} from "react";
 
 export function Logo({ className = "" }: { className?: string }) {
   return (
@@ -28,11 +39,17 @@ export function Logo({ className = "" }: { className?: string }) {
   );
 }
 
+export const EASE = [0.22, 1, 0.36, 1] as const;
+
+/** Shared hover/press feedback for buttons (transform only). */
+export const BTN =
+  "transition duration-200 ease-out hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.97] motion-reduce:translate-none motion-reduce:scale-none";
+
 export function Reveal({
   children,
   delay = 0,
   className,
-  y = 24,
+  y = 20,
 }: {
   children: ReactNode;
   delay?: number;
@@ -46,10 +63,106 @@ export function Reveal({
       initial={reduce ? false : { opacity: 0, y }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-60px" }}
-      transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1], delay }}
+      transition={{ duration: 0.55, ease: EASE, delay }}
     >
       {children}
     </motion.div>
+  );
+}
+
+/**
+ * Counts up to `value` the first time it scrolls into view. The final value
+ * is rendered on the server, so no-JS and reduced-motion users see it as is.
+ */
+export function CountUp({
+  value,
+  className,
+}: {
+  value: string;
+  className?: string;
+}) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const inView = useInView(ref, { once: true, margin: "-40px" });
+  const reduce = useReducedMotion();
+  const target = Number(value);
+  const numeric = Number.isFinite(target) && value.trim() !== "";
+  // Years count up over the last stretch rather than from zero.
+  const from = target >= 1000 ? target - 25 : 0;
+
+  useEffect(() => {
+    if (!numeric || reduce || !ref.current) return;
+    if (!inView) {
+      ref.current.textContent = String(from);
+      return;
+    }
+    const el = ref.current;
+    const controls = animate(from, target, {
+      duration: target >= 1000 ? 1.4 : 1,
+      ease: [0.16, 1, 0.3, 1],
+      onUpdate: (v) => {
+        el.textContent = String(Math.round(v));
+      },
+    });
+    return () => controls.stop();
+  }, [inView, numeric, reduce, from, target]);
+
+  return (
+    <span ref={ref} className={`tabular-nums ${className ?? ""}`}>
+      {value}
+    </span>
+  );
+}
+
+/** A thin pipe run with rounded bends that draws itself in on scroll. */
+export function PipeDivider({ light = false }: { light?: boolean }) {
+  const reduce = useReducedMotion();
+  const draw = {
+    initial: reduce ? false : { pathLength: 0, opacity: 0 },
+    whileInView: { pathLength: 1, opacity: 1 },
+    viewport: { once: true, margin: "-40px" },
+  } as const;
+  // [x, y, delay]: each joint pops in as the line reaches it.
+  const joints = [
+    [214, 30, 0.55],
+    [236, 8, 0.62],
+    [364, 8, 0.8],
+    [386, 30, 0.87],
+  ];
+  return (
+    <div
+      aria-hidden
+      className="pointer-events-none absolute inset-x-0 top-6"
+    >
+      <svg
+        viewBox="0 0 600 40"
+        className="mx-auto block h-auto w-full max-w-6xl px-4 sm:px-6"
+        fill="none"
+      >
+        <motion.path
+          d="M0 30 H206 Q218 30 218 18 V16 Q218 8 228 8 H372 Q382 8 382 16 V18 Q382 30 394 30 H600"
+          stroke={light ? "rgb(255 255 255 / 0.22)" : "var(--color-brand-200)"}
+          strokeWidth={2}
+          strokeLinecap="round"
+          vectorEffect="non-scaling-stroke"
+          {...draw}
+          transition={{ duration: 1.4, ease: "easeInOut" }}
+        />
+        {joints.map(([cx, cy, delay], i) => (
+          <motion.circle
+            key={i}
+            cx={cx}
+            cy={cy}
+            r={2.6}
+            fill={light ? "var(--color-copper-300)" : "var(--color-copper-500)"}
+            initial={reduce ? false : { opacity: 0, scale: 0 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true, margin: "-40px" }}
+            transition={{ duration: 0.3, delay, ease: EASE }}
+            style={{ transformBox: "fill-box", transformOrigin: "center" }}
+          />
+        ))}
+      </svg>
+    </div>
   );
 }
 

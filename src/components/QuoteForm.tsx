@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { CheckCircle2, Send } from "lucide-react";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { company, locations, serviceKeys, type Dict } from "@/lib/content";
+import { BTN, EASE } from "./ui";
 
 const field =
   "mt-1.5 block w-full rounded-xl border border-steel-300 bg-white px-4 py-3 text-base text-ink placeholder:text-steel-400 shadow-sm transition focus:border-brand-500 focus:ring-4 focus:ring-brand-100 focus:outline-none";
@@ -52,10 +53,18 @@ export default function QuoteForm({ t }: { t: Dict }) {
             initial={{ opacity: 0, scale: 0.97 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0 }}
+            transition={{ duration: 0.4, ease: EASE }}
             className="flex flex-col items-center py-10 text-center"
             role="status"
           >
-            <CheckCircle2 className="size-14 text-brand-600" aria-hidden />
+            <motion.span
+              className="inline-flex"
+              initial={{ scale: 0.6, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: "spring", stiffness: 260, damping: 18, delay: 0.1 }}
+            >
+              <CheckCircle2 className="size-14 text-brand-600" aria-hidden />
+            </motion.span>
             <h3 className="mt-4 text-2xl font-bold text-ink">{f.thanksTitle}</h3>
             <p className="mt-2 max-w-sm text-steel-600">{f.thanksText}</p>
             <a
@@ -67,7 +76,7 @@ export default function QuoteForm({ t }: { t: Dict }) {
             <button
               type="button"
               onClick={() => setSent(false)}
-              className="mt-6 rounded-full border border-steel-300 px-5 py-2.5 text-sm font-semibold text-steel-700 hover:bg-steel-50"
+              className={`mt-6 rounded-full border border-steel-300 px-5 py-2.5 text-sm font-semibold text-steel-700 hover:bg-steel-50 ${BTN}`}
             >
               {f.again}
             </button>
@@ -159,9 +168,12 @@ export default function QuoteForm({ t }: { t: Dict }) {
             <div className="sm:col-span-2">
               <button
                 type="submit"
-                className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-brand-600 px-6 py-4 text-base font-semibold text-white shadow-md transition hover:bg-brand-700 focus-visible:ring-4 focus-visible:ring-brand-200 focus-visible:outline-none sm:w-auto"
+                className={`group inline-flex w-full items-center justify-center gap-2 rounded-full bg-brand-600 px-6 py-4 text-base font-semibold text-white shadow-md hover:bg-brand-700 focus-visible:ring-4 focus-visible:ring-brand-200 focus-visible:outline-none sm:w-auto ${BTN}`}
               >
-                <Send className="size-5" aria-hidden />
+                <Send
+                  className="size-5 transition-transform duration-300 ease-out group-hover:translate-x-0.5 group-hover:-translate-y-0.5 motion-reduce:group-hover:translate-none"
+                  aria-hidden
+                />
                 {f.submit}
               </button>
             </div>

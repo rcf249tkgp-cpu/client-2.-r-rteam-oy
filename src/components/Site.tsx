@@ -1,6 +1,12 @@
 "use client";
 
-import { motion, useReducedMotion } from "framer-motion";
+import {
+  MotionConfig,
+  motion,
+  useReducedMotion,
+  type Variants,
+} from "framer-motion";
+import { Fragment } from "react";
 import {
   ArrowRight,
   Building,
@@ -36,7 +42,16 @@ import {
 import Header, { LangToggle } from "./Header";
 import QuoteForm from "./QuoteForm";
 import { useLang } from "./lang";
-import { Logo, Photo, Reveal, SectionHeading } from "./ui";
+import {
+  BTN,
+  CountUp,
+  EASE,
+  Logo,
+  Photo,
+  PipeDivider,
+  Reveal,
+  SectionHeading,
+} from "./ui";
 
 const serviceIcons: Record<ServiceKey, LucideIcon> = {
   pipes: Droplets,
@@ -67,48 +82,65 @@ export default function Site() {
   const { lang, t, setLang } = useLang();
 
   return (
-    <div id="top" className="flex min-h-screen flex-col">
-      <div className="bg-brand-950 text-white/85">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-1.5 text-xs sm:px-6">
-          <span className="font-medium tracking-wide">{t.banner}</span>
-          <div className="sm:hidden">
-            <LangToggle lang={lang} setLang={setLang} label={t.langLabel} dark />
+    <MotionConfig reducedMotion="user">
+      <div id="top" className="flex min-h-screen flex-col">
+        <div className="bg-brand-950 text-white/85">
+          <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-1.5 text-xs sm:px-6">
+            <span className="font-medium tracking-wide">{t.banner}</span>
+            <div className="sm:hidden">
+              <LangToggle lang={lang} setLang={setLang} label={t.langLabel} dark />
+            </div>
           </div>
         </div>
+
+        <Header t={t} lang={lang} setLang={setLang} />
+
+        <main className="flex-1">
+          <Hero t={t} />
+          <Services t={t} />
+          <Groups t={t} />
+          <Shop t={t} />
+          <Why t={t} />
+          <Contact t={t} lang={lang} />
+          <Quote t={t} />
+        </main>
+
+        <Footer t={t} />
       </div>
-
-      <Header t={t} lang={lang} setLang={setLang} />
-
-      <main className="flex-1">
-        <Hero t={t} />
-        <Services t={t} />
-        <Groups t={t} />
-        <Shop t={t} />
-        <Why t={t} />
-        <Contact t={t} lang={lang} />
-        <Quote t={t} />
-      </main>
-
-      <Footer t={t} />
-    </div>
+    </MotionConfig>
   );
 }
 
+const heroWords: Variants = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.06, delayChildren: 0.2 } },
+};
+const heroWord: Variants = {
+  hidden: { opacity: 0, y: "0.45em" },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: EASE } },
+};
+
 function Hero({ t }: { t: Dict }) {
   const reduce = useReducedMotion();
-  const item = (i: number) => ({
-    initial: reduce ? false : { opacity: 0, y: 28 },
+  const words = t.hero.title.split(" ");
+  const afterTitle = 0.2 + words.length * 0.06;
+  const item = (delay: number) => ({
+    initial: reduce ? false : { opacity: 0, y: 20 },
     animate: { opacity: 1, y: 0 },
-    transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] as const, delay: 0.1 + i * 0.1 },
+    transition: { duration: 0.5, ease: EASE, delay },
   });
 
   return (
     <section className="relative isolate overflow-hidden bg-brand-900">
       <motion.div
-        className="absolute inset-0 -z-10"
-        initial={reduce ? false : { scale: 1.08 }}
-        animate={{ scale: 1 }}
-        transition={{ duration: 1.6, ease: "easeOut" }}
+        className="absolute inset-0 -z-10 will-change-transform"
+        initial={false}
+        animate={reduce ? { scale: 1 } : { scale: [1, 1.08] }}
+        transition={
+          reduce
+            ? { duration: 0 }
+            : { duration: 22, ease: "easeInOut", repeat: Infinity, repeatType: "mirror" }
+        }
       >
         <Photo
           src={photos.hero}
@@ -124,42 +156,57 @@ function Hero({ t }: { t: Dict }) {
       <div className="mx-auto max-w-6xl px-4 pt-16 pb-20 sm:px-6 sm:pt-24 sm:pb-28 lg:pt-32 lg:pb-36">
         <div className="max-w-3xl">
           <motion.p
-            {...item(0)}
+            {...item(0.05)}
             className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3.5 py-1.5 text-sm font-medium text-brand-100 ring-1 ring-white/15 backdrop-blur"
           >
             <span className="size-2 rounded-full bg-copper-500" />
             {t.hero.eyebrow}
           </motion.p>
           <motion.h1
-            {...item(1)}
+            variants={heroWords}
+            initial={reduce ? false : "hidden"}
+            animate="visible"
             className="mt-6 text-4xl leading-[1.08] font-extrabold tracking-tight text-balance text-white sm:text-5xl lg:text-6xl"
           >
-            {t.hero.title}
+            {words.map((w, i) => (
+              <Fragment key={`${w}-${i}`}>
+                <motion.span variants={heroWord} className="inline-block">
+                  {w}
+                </motion.span>
+                {i < words.length - 1 && " "}
+              </Fragment>
+            ))}
           </motion.h1>
           <motion.p
-            {...item(2)}
+            {...item(afterTitle)}
             className="mt-6 max-w-2xl text-lg leading-relaxed text-brand-100 sm:text-xl"
           >
             {t.hero.lead}
           </motion.p>
-          <motion.div {...item(3)} className="mt-9 flex flex-col gap-3 sm:flex-row">
+          <motion.div
+            {...item(afterTitle + 0.12)}
+            className="mt-9 flex flex-col gap-3 sm:flex-row"
+          >
             <a
               href={company.phoneHref}
-              className="inline-flex items-center justify-center gap-2.5 rounded-full bg-copper-600 px-7 py-4 text-lg font-semibold text-white shadow-lg shadow-black/20 transition hover:bg-copper-700"
+              className={`pulse-ring relative inline-flex items-center justify-center gap-2.5 rounded-full bg-copper-600 px-7 py-4 text-lg font-semibold text-white shadow-lg shadow-black/20 hover:bg-copper-700 ${BTN}`}
             >
               <Phone className="size-5" aria-hidden />
               {t.call}
             </a>
             <a
               href="#offert"
-              className="inline-flex items-center justify-center gap-2.5 rounded-full bg-white px-7 py-4 text-lg font-semibold text-brand-800 shadow-lg shadow-black/10 transition hover:bg-brand-50"
+              className={`group inline-flex items-center justify-center gap-2.5 rounded-full bg-white px-7 py-4 text-lg font-semibold text-brand-800 shadow-lg shadow-black/10 hover:bg-brand-50 ${BTN}`}
             >
               {t.hero.quote}
-              <ArrowRight className="size-5" aria-hidden />
+              <ArrowRight
+                className="size-5 transition-transform duration-300 group-hover:translate-x-1 motion-reduce:group-hover:translate-x-0"
+                aria-hidden
+              />
             </a>
           </motion.div>
           <motion.ul
-            {...item(4)}
+            {...item(afterTitle + 0.24)}
             className="mt-10 flex flex-wrap gap-x-6 gap-y-2 text-sm font-medium text-white/80"
           >
             {t.hero.facts.map((f) => (
@@ -176,8 +223,10 @@ function Hero({ t }: { t: Dict }) {
 }
 
 function Services({ t }: { t: Dict }) {
+  const reduce = useReducedMotion();
   return (
-    <section id="tjanster" className="py-20 sm:py-28">
+    <section id="tjanster" className="relative py-20 sm:py-28">
+      <PipeDivider />
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <SectionHeading kicker={t.services.kicker} title={t.services.title} lead={t.services.lead} />
         <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 lg:gap-7">
@@ -185,27 +234,38 @@ function Services({ t }: { t: Dict }) {
             const Icon = serviceIcons[key];
             const s = t.services.items[key];
             return (
-              <Reveal key={key} delay={(i % 3) * 0.08}>
-                <article className="group flex h-full flex-col overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-steel-200 transition duration-300 hover:-translate-y-1 hover:shadow-xl">
-                  <div className="relative">
-                    <Photo
-                      src={photos[key]}
-                      alt={s.title}
-                      icon={Icon}
-                      className="aspect-[16/10] transition-transform duration-500 group-hover:scale-[1.02]"
-                    />
-                    <span className="absolute top-3 right-3 rounded-full bg-white/95 px-2.5 py-1 text-[11px] font-semibold text-copper-700 shadow-sm">
-                      {t.services.placeholder}
-                    </span>
-                  </div>
-                  <div className="flex flex-1 flex-col p-6">
-                    <div className="relative z-10 -mt-12 mb-4 inline-flex size-12 items-center justify-center rounded-xl bg-brand-600 text-white shadow-lg ring-4 ring-white">
-                      <Icon className="size-6" aria-hidden />
+              <Reveal key={key} delay={(i % 3) * 0.08} className="h-full">
+                <motion.div
+                  className="group relative isolate h-full"
+                  whileHover={reduce ? undefined : { y: -6 }}
+                  whileTap={reduce ? undefined : { scale: 0.985 }}
+                  transition={{ duration: 0.3, ease: EASE }}
+                >
+                  <div
+                    aria-hidden
+                    className="absolute inset-0 -z-10 rounded-2xl shadow-[0_22px_45px_-14px_rgb(20_42_78/0.3)] opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                  />
+                  <article className="flex h-full flex-col overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-steel-200">
+                    <div className="relative">
+                      <Photo
+                        src={photos[key]}
+                        alt={s.title}
+                        icon={Icon}
+                        className="aspect-[16/10] transition-transform duration-500 ease-out group-hover:scale-[1.04] motion-reduce:group-hover:scale-100"
+                      />
+                      <span className="absolute top-3 right-3 rounded-full bg-white/95 px-2.5 py-1 text-[11px] font-semibold text-copper-700 shadow-sm">
+                        {t.services.placeholder}
+                      </span>
                     </div>
-                    <h3 className="text-xl font-bold text-ink">{s.title}</h3>
-                    <p className="mt-2 leading-relaxed text-steel-600">{s.text}</p>
-                  </div>
-                </article>
+                    <div className="flex flex-1 flex-col p-6">
+                      <div className="relative z-10 -mt-12 mb-4 inline-flex size-12 items-center justify-center rounded-xl bg-brand-600 text-white shadow-lg ring-4 ring-white transition-transform duration-300 ease-out group-hover:scale-110 group-hover:-rotate-6 motion-reduce:group-hover:scale-100 motion-reduce:group-hover:rotate-0">
+                        <Icon className="size-6" aria-hidden />
+                      </div>
+                      <h3 className="text-xl font-bold text-ink">{s.title}</h3>
+                      <p className="mt-2 leading-relaxed text-steel-600">{s.text}</p>
+                    </div>
+                  </article>
+                </motion.div>
               </Reveal>
             );
           })}
@@ -225,7 +285,7 @@ function Groups({ t }: { t: Dict }) {
             const Icon = groupIcons[key];
             const g = t.groups.items[key];
             return (
-              <Reveal key={key} delay={i * 0.07}>
+              <Reveal key={key} delay={(i % 4) * 0.08} className="h-full">
                 <div className="h-full rounded-2xl bg-white p-6 shadow-sm ring-1 ring-steel-200">
                   <div className="inline-flex size-12 items-center justify-center rounded-full bg-brand-50 text-brand-600">
                     <Icon className="size-6" aria-hidden />
@@ -244,7 +304,8 @@ function Groups({ t }: { t: Dict }) {
 
 function Shop({ t }: { t: Dict }) {
   return (
-    <section id="butik" className="py-20 sm:py-28">
+    <section id="butik" className="relative py-20 sm:py-28">
+      <PipeDivider />
       <div className="mx-auto grid max-w-6xl items-start gap-10 px-4 sm:px-6 lg:grid-cols-2 lg:gap-14">
         <div>
           <SectionHeading kicker={t.shop.kicker} title={t.shop.title} lead={t.shop.lead} />
@@ -271,7 +332,7 @@ function Shop({ t }: { t: Dict }) {
               href={directionsHref}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-6 inline-flex items-center gap-2 rounded-full border-2 border-brand-600 px-6 py-3 font-semibold text-brand-700 transition hover:bg-brand-600 hover:text-white"
+              className={`mt-6 inline-flex items-center gap-2 rounded-full border-2 border-brand-600 px-6 py-3 font-semibold text-brand-700 hover:bg-brand-600 hover:text-white ${BTN}`}
             >
               <Navigation className="size-4" aria-hidden />
               {t.shop.directions}
@@ -304,6 +365,7 @@ function Shop({ t }: { t: Dict }) {
 function Why({ t }: { t: Dict }) {
   return (
     <section id="varfor" className="relative isolate overflow-hidden bg-brand-900 py-20 sm:py-28">
+      <PipeDivider light />
       <div aria-hidden className="photo-fallback absolute inset-0 -z-10 opacity-60" />
       <div className="mx-auto grid max-w-6xl gap-12 px-4 sm:px-6 lg:grid-cols-[1.1fr_1fr] lg:items-center lg:gap-16">
         <div>
@@ -339,7 +401,9 @@ function Why({ t }: { t: Dict }) {
             <div className="relative -mt-10 mx-3 grid grid-cols-3 divide-x divide-steel-200 rounded-2xl bg-white p-4 shadow-xl sm:mx-6 sm:p-5">
               {t.why.stats.map((s) => (
                 <div key={s.label} className="px-2 text-center">
-                  <p className="text-2xl font-extrabold text-brand-600 sm:text-3xl">{s.value}</p>
+                  <p className="text-2xl font-extrabold text-brand-600 sm:text-3xl">
+                    <CountUp value={s.value} />
+                  </p>
                   <p className="mt-1 text-xs leading-snug font-medium text-steel-600 sm:text-sm">
                     {s.label}
                   </p>
@@ -355,7 +419,8 @@ function Why({ t }: { t: Dict }) {
 
 function Contact({ t, lang }: { t: Dict; lang: "sv" | "fi" }) {
   return (
-    <section id="kontakt" className="py-20 sm:py-28">
+    <section id="kontakt" className="relative py-20 sm:py-28">
+      <PipeDivider />
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <SectionHeading kicker={t.contact.kicker} title={t.contact.title} lead={t.contact.lead} />
         <div className="mt-12 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
@@ -365,7 +430,7 @@ function Contact({ t, lang }: { t: Dict; lang: "sv" | "fi" }) {
               .map((n) => n[0])
               .join("");
             return (
-              <Reveal key={p.email} delay={i * 0.08}>
+              <Reveal key={p.email} delay={(i % 4) * 0.08} className="h-full">
                 <div className="flex h-full flex-col rounded-2xl bg-white p-6 shadow-sm ring-1 ring-steel-200">
                   <div className="flex items-center gap-4">
                     <div
@@ -388,14 +453,14 @@ function Contact({ t, lang }: { t: Dict; lang: "sv" | "fi" }) {
                   <div className="mt-auto grid grid-cols-2 gap-2 pt-5">
                     <a
                       href={p.phoneHref}
-                      className="inline-flex items-center justify-center gap-1.5 rounded-full bg-brand-600 px-3 py-3 text-sm font-semibold text-white transition hover:bg-brand-700"
+                      className={`inline-flex items-center justify-center gap-1.5 rounded-full bg-brand-600 px-3 py-3 text-sm font-semibold text-white hover:bg-brand-700 ${BTN}`}
                     >
                       <Phone className="size-4" aria-hidden />
                       {t.contact.call}
                     </a>
                     <a
                       href={`mailto:${p.email}`}
-                      className="inline-flex items-center justify-center gap-1.5 rounded-full bg-brand-50 px-3 py-3 text-sm font-semibold text-brand-700 transition hover:bg-brand-100"
+                      className={`inline-flex items-center justify-center gap-1.5 rounded-full bg-brand-50 px-3 py-3 text-sm font-semibold text-brand-700 hover:bg-brand-100 ${BTN}`}
                     >
                       <Mail className="size-4" aria-hidden />
                       {t.contact.email}
@@ -406,7 +471,7 @@ function Contact({ t, lang }: { t: Dict; lang: "sv" | "fi" }) {
             );
           })}
 
-          <Reveal delay={0.24}>
+          <Reveal delay={0.24} className="h-full">
             <div className="flex h-full flex-col rounded-2xl bg-steel-800 p-6 text-white shadow-sm">
               <div className="flex items-center gap-4">
                 <div className="inline-flex size-14 shrink-0 items-center justify-center rounded-full bg-white/10">
@@ -425,14 +490,14 @@ function Contact({ t, lang }: { t: Dict; lang: "sv" | "fi" }) {
               <div className="mt-auto grid grid-cols-2 gap-2 pt-5">
                 <a
                   href={company.phoneHref}
-                  className="inline-flex items-center justify-center gap-1.5 rounded-full bg-copper-600 px-3 py-3 text-sm font-semibold text-white transition hover:bg-copper-700"
+                  className={`inline-flex items-center justify-center gap-1.5 rounded-full bg-copper-600 px-3 py-3 text-sm font-semibold text-white hover:bg-copper-700 ${BTN}`}
                 >
                   <Phone className="size-4" aria-hidden />
                   {t.contact.call}
                 </a>
                 <a
                   href={`mailto:${company.email}`}
-                  className="inline-flex items-center justify-center gap-1.5 rounded-full bg-white/10 px-3 py-3 text-sm font-semibold text-white transition hover:bg-white/20"
+                  className={`inline-flex items-center justify-center gap-1.5 rounded-full bg-white/10 px-3 py-3 text-sm font-semibold text-white hover:bg-white/20 ${BTN}`}
                 >
                   <Mail className="size-4" aria-hidden />
                   {t.contact.email}
@@ -455,7 +520,7 @@ function Quote({ t }: { t: Dict }) {
           <Reveal delay={0.1}>
             <a
               href={company.phoneHref}
-              className="mt-8 flex items-center gap-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-steel-200 transition hover:ring-brand-300"
+              className={`mt-8 flex items-center gap-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-steel-200 hover:ring-brand-300 ${BTN}`}
             >
               <span className="inline-flex size-12 items-center justify-center rounded-full bg-copper-600 text-white">
                 <Phone className="size-5" aria-hidden />

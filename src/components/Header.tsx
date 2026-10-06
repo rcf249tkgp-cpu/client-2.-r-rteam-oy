@@ -1,10 +1,16 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
+import {
+  AnimatePresence,
+  motion,
+  useMotionValueEvent,
+  useReducedMotion,
+  useScroll,
+} from "framer-motion";
 import { Menu, Phone, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { company, type Dict, type Lang } from "@/lib/content";
-import { Logo } from "./ui";
+import { BTN, EASE, Logo } from "./ui";
 
 export function LangToggle({
   lang,
@@ -31,7 +37,7 @@ export function LangToggle({
           type="button"
           onClick={() => setLang(l)}
           aria-pressed={lang === l}
-          className={`min-w-10 rounded-full px-2.5 py-1.5 uppercase transition-colors ${
+          className={`min-w-10 rounded-full px-2.5 py-1.5 uppercase transition duration-200 active:scale-95 motion-reduce:scale-none ${
             lang === l
               ? "bg-brand-600 text-white shadow-sm"
               : dark
@@ -57,13 +63,13 @@ export default function Header({
 }) {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const reduce = useReducedMotion();
+  const { scrollY } = useScroll();
 
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 8);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+  useMotionValueEvent(scrollY, "change", (y) => setScrolled(y > 40));
+
+  // Reduced motion: keep the frosted background, skip the shrink.
+  const compact = scrolled && !reduce;
 
   const links = [
     ["#tjanster", t.nav.services],
@@ -74,27 +80,59 @@ export default function Header({
   ] as const;
 
   return (
-    <header
-      className={`sticky top-0 z-50 border-b bg-white/90 backdrop-blur-md transition-shadow ${
-        scrolled ? "border-steel-200 shadow-sm" : "border-transparent"
-      }`}
+    <motion.header
+      className="sticky top-0 z-50"
+      initial={false}
+      animate={{ y: compact ? -8 : 0 }}
+      transition={{ duration: 0.35, ease: EASE }}
     >
-      <div className="mx-auto flex h-16 max-w-6xl items-center gap-3 px-4 sm:h-[4.5rem] sm:px-6">
-        <a href="#top" className="flex shrink-0 flex-col" aria-label="Rörteam">
+      {/* Solid at the top; frosted glass with a hairline once scrolled. */}
+      <motion.div
+        aria-hidden
+        className="absolute inset-0 -z-10 bg-white"
+        initial={false}
+        animate={{ opacity: scrolled ? 0 : 1 }}
+        transition={{ duration: 0.3 }}
+      />
+      <motion.div
+        aria-hidden
+        className="absolute inset-0 -z-10 border-b border-steel-200 bg-white/90 shadow-sm backdrop-blur-md"
+        initial={false}
+        animate={{ opacity: scrolled ? 1 : 0 }}
+        transition={{ duration: 0.3 }}
+      />
+      <motion.div
+        className="mx-auto flex h-16 max-w-6xl items-center gap-3 px-4 sm:h-[4.5rem] sm:px-6"
+        initial={false}
+        animate={{ y: compact ? 4 : 0 }}
+        transition={{ duration: 0.35, ease: EASE }}
+      >
+        <motion.a
+          href="#top"
+          className="flex shrink-0 origin-left flex-col"
+          aria-label="Rörteam"
+          initial={false}
+          animate={{ scale: compact ? 0.9 : 1 }}
+          transition={{ duration: 0.35, ease: EASE }}
+        >
           <Logo className="h-7 w-auto sm:h-8" />
           <span className="mt-0.5 hidden text-[10px] font-medium tracking-wide text-steel-600 sm:block">
             {t.tagline}
           </span>
-        </a>
+        </motion.a>
 
         <nav className="ml-auto hidden items-center gap-1 lg:flex">
           {links.map(([href, label]) => (
             <a
               key={href}
               href={href}
-              className="rounded-md px-3 py-2 text-[15px] font-medium text-steel-700 transition-colors hover:bg-steel-50 hover:text-brand-700"
+              className="group relative rounded-md px-3 py-2 text-[15px] font-medium text-steel-700 transition-colors hover:text-brand-700"
             >
               {label}
+              <span
+                aria-hidden
+                className="absolute inset-x-3 bottom-1 h-0.5 origin-left scale-x-0 rounded-full bg-brand-600 transition-transform duration-300 ease-out group-hover:scale-x-100"
+              />
             </a>
           ))}
         </nav>
@@ -105,7 +143,7 @@ export default function Header({
           </div>
           <a
             href={company.phoneHref}
-            className="inline-flex items-center gap-2 rounded-full bg-copper-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-copper-700"
+            className={`inline-flex items-center gap-2 rounded-full bg-copper-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-copper-700 ${BTN}`}
           >
             <Phone className="size-4" aria-hidden />
             <span className="sm:hidden">{t.callShort}</span>
@@ -117,22 +155,34 @@ export default function Header({
             aria-expanded={open}
             aria-controls="mobile-menu"
             aria-label={open ? t.close : t.menu}
-            className="inline-flex size-11 items-center justify-center rounded-full text-ink hover:bg-steel-100 lg:hidden"
+            className="inline-flex size-11 items-center justify-center rounded-full text-ink transition-colors hover:bg-steel-100 active:bg-steel-200 lg:hidden"
           >
-            {open ? <X className="size-6" /> : <Menu className="size-6" />}
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.span
+                key={open ? "x" : "menu"}
+                initial={{ opacity: 0, rotate: -45 }}
+                animate={{ opacity: 1, rotate: 0 }}
+                exit={{ opacity: 0, rotate: 45 }}
+                transition={{ duration: 0.15 }}
+                className="inline-flex"
+              >
+                {open ? <X className="size-6" /> : <Menu className="size-6" />}
+              </motion.span>
+            </AnimatePresence>
           </button>
         </div>
-      </div>
+      </motion.div>
 
+      {/* Overlays the page (absolute) so opening it never shifts content. */}
       <AnimatePresence>
         {open && (
           <motion.nav
             id="mobile-menu"
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.25 }}
-            className="overflow-hidden border-t border-steel-200 bg-white lg:hidden"
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.22, ease: EASE }}
+            className="absolute inset-x-0 top-full border-y border-steel-200 bg-white shadow-lg lg:hidden"
           >
             <div className="mx-auto flex max-w-6xl flex-col px-4 py-3 sm:px-6">
               {links.map(([href, label]) => (
@@ -140,7 +190,7 @@ export default function Header({
                   key={href}
                   href={href}
                   onClick={() => setOpen(false)}
-                  className="rounded-lg px-3 py-3 text-lg font-medium text-ink hover:bg-steel-50"
+                  className="rounded-lg px-3 py-3 text-lg font-medium text-ink transition-colors hover:bg-steel-50 active:bg-steel-100"
                 >
                   {label}
                 </a>
@@ -148,7 +198,7 @@ export default function Header({
               <a
                 href="#offert"
                 onClick={() => setOpen(false)}
-                className="mt-2 rounded-full bg-brand-600 px-5 py-3 text-center font-semibold text-white"
+                className={`mt-2 rounded-full bg-brand-600 px-5 py-3 text-center font-semibold text-white ${BTN}`}
               >
                 {t.nav.quote}
               </a>
@@ -160,6 +210,6 @@ export default function Header({
           </motion.nav>
         )}
       </AnimatePresence>
-    </header>
+    </motion.header>
   );
 }
